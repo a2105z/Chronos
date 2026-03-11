@@ -1,0 +1,21 @@
+# Chronos - Backend dependencies
+# Python 3.11+
+
+# Web framework
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+
+# Data validation & DB
+pydantic>=2.5.0
+sqlmodel>=0.0.14
+
+# Calendar export
+icalendar>=5.0.0
+
+# Testing
+pytest>=7.4.0
+pytest-cov>=4.1.0
+httpx>=0.26.0
+
+# Linting
+ruff>=0.1.0

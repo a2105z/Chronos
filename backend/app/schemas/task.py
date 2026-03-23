@@ -1,7 +1,7 @@
 """Task request/response schemas."""
 
 from datetime import datetime
-from typing import Optional
+from typing import Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -12,7 +12,9 @@ class TaskBase(BaseModel):
     name: str
     estimated_duration_minutes: int = Field(ge=1)
     priority: int = Field(default=0, ge=0)
+    earliest_start: Optional[datetime] = None
     deadline: Optional[datetime] = None
+    preferred_time_of_day: Optional[Literal["morning", "afternoon", "evening", "anytime"]] = "anytime"
     splittable: bool = False
 
 
@@ -28,7 +30,9 @@ class TaskUpdate(BaseModel):
     name: Optional[str] = None
     estimated_duration_minutes: Optional[int] = Field(default=None, ge=1)
     priority: Optional[int] = Field(default=None, ge=0)
+    earliest_start: Optional[datetime] = None
     deadline: Optional[datetime] = None
+    preferred_time_of_day: Optional[Literal["morning", "afternoon", "evening", "anytime"]] = None
     splittable: Optional[bool] = None
 
 

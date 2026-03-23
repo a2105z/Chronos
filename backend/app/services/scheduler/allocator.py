@@ -1,7 +1,7 @@
 """Greedy task allocation into available slots."""
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from app.models.constraint import Constraint
@@ -29,6 +29,39 @@ def slotOverlapsAny(slotStart: datetime, slotEnd: datetime, usedRanges: list[tup
             continue
         return True
     return False
+
+
+def matchesTaskTimePreference(task: Task, slotStart: datetime) -> bool:
+    """Return True if slot start time respects task's preferred period."""
+    preferred = task.preferred_time_of_day
+    if preferred is None or preferred == "anytime":
+        return True
+    hour = slotStart.hour
+    if preferred == "morning":
+        return 6 <= hour < 12
+    if preferred == "afternoon":
+        return 12 <= hour < 18
+    if preferred == "evening":
+        return 18 <= hour < 24
+    return True
+
+
+def isSlotAllowedForTask(task: Task, slotStart: datetime, slotEnd: datetime) -> bool:
+    """Return True if slot respects earliest start, deadline, and preferences."""
+    comparableStart = toUtcNaive(slotStart)
+    comparableEnd = toUtcNaive(slotEnd)
+    if task.earliest_start is not None and comparableStart < toUtcNaive(task.earliest_start):
+        return False
+    if task.deadline is not None and comparableEnd > toUtcNaive(task.deadline):
+        return False
+    return matchesTaskTimePreference(task, slotStart)
+
+
+def toUtcNaive(value: datetime) -> datetime:
+    """Normalize datetime for safe comparisons across timezone-aware/naive values."""
+    if value.tzinfo is None:
+        return value
+    return value.astimezone(timezone.utc).replace(tzinfo=None)
 
 
 
@@ -89,6 +122,8 @@ def allocateSplittable(task: Task, remaining: int, slots: list[tuple[datetime, d
     for (slotStart, slotEnd) in slots:
         if remaining <= 0:
             break
+        if not isSlotAllowedForTask(task, slotStart, slotEnd):
+            continue
         if slotOverlapsAny(slotStart, slotEnd, usedRanges):
             continue
 
@@ -122,6 +157,11 @@ def allocateFixed(task: Task, remaining: int, slots: list[tuple[datetime, dateti
     for (slotStart, slotEnd) in slots:
         if runMins >= remaining:
             break
+        if not isSlotAllowedForTask(task, slotStart, slotEnd):
+            runStart = None
+            runEnd = None
+            runMins = 0
+            continue
         if slotOverlapsAny(slotStart, slotEnd, usedRanges):
             runStart = None
             runEnd = None

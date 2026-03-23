@@ -1,0 +1,127 @@
+.calendar-view {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.calendar-view h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.calendar-error {
+  color: #b42318;
+  margin: 0 0 1rem;
+}
+
+.three-week-grid-wrap {
+  overflow-x: auto;
+}
+
+.three-week-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(180px, 1fr));
+  gap: 0.75rem;
+  min-width: 1280px;
+}
+
+.calendar-day {
+  border: 1px solid #e9edf3;
+  border-radius: 12px;
+  background: #fcfdff;
+  padding: 0.7rem;
+  min-height: 120px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+}
+
+.calendar-day-past {
+  background: #f2f4f7;
+  border-color: #d0d5dd;
+  opacity: 0.8;
+}
+
+.calendar-day-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  color: #344054;
+}
+
+.calendar-day-header span {
+  color: #667085;
+  font-size: 0.85rem;
+}
+
+.calendar-day-empty {
+  margin: 0;
+  color: #98a2b3;
+  font-size: 0.9rem;
+}
+
+.schedule-block-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.schedule-block-item {
+  border: 1px solid #dbe7ff;
+  border-left: 4px solid #4f7cff;
+  border-radius: 10px;
+  padding: 0.6rem 0.65rem;
+  background: linear-gradient(180deg, #f9fbff 0%, #f3f8ff 100%);
+  box-shadow: 0 1px 2px rgba(79, 124, 255, 0.12);
+}
+
+.schedule-block-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.2rem;
+}
+
+.schedule-block-main span {
+  color: #4a5b7a;
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
+.schedule-block-time {
+  color: #2d3d59;
+  font-size: 0.85rem;
+}
+
+.unscheduled-task-list {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.unscheduled-task-item {
+  border: 1px dashed #f7b955;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #fffdf8 0%, #fff8e8 100%);
+  padding: 0.5rem 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.unscheduled-task-item span {
+  color: #92400e;
+  font-size: 0.85rem;
+}

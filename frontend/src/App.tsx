@@ -1,51 +1,47 @@
-/** Chronos - main app with tasks and calendar views. */
+/** Chronos - main shell with Tasks and Calendar views. */
 
 import { useState } from "react";
-import TaskList from "./components/TaskList";
-import CalendarView from "./components/CalendarView";
+import type { ReactNode } from "react";
+import type { AppView } from "./types/app";
+import { AppHeader } from "./components/layout/AppHeader";
+import TaskList from "./components/tasks/TaskList";
+import CalendarView from "./components/calendar/CalendarView";
 import "./App.css";
 
-
 function App() {
-  const [activeView, setActiveView] = useState<"tasks" | "calendar">("tasks");
+  const [activeView, setActiveView] = useState<AppView>("tasks");
+  const [calendarRefreshTrigger, setCalendarRefreshTrigger] = useState(0);
 
-  let tasksTabClass = "";
-  if (activeView === "tasks") {
-    tasksTabClass = "active";
-  }
-
-  let calendarTabClass = "";
-  if (activeView === "calendar") {
-    calendarTabClass = "active";
-  }
-
-  function handleTasksClick() {
+  function handleSelectTasks() {
     setActiveView("tasks");
   }
 
-  function handleCalendarClick() {
+  function handleSelectCalendar() {
     setActiveView("calendar");
+  }
+
+  function handleTaskCreated() {
+    setCalendarRefreshTrigger(function bumpCounter(previousValue) {
+      return previousValue + 1;
+    });
+  }
+
+  let mainContent: ReactNode = null;
+  if (activeView === "tasks") {
+    mainContent = <TaskList onTaskCreated={handleTaskCreated} />;
+  }
+  if (activeView === "calendar") {
+    mainContent = <CalendarView refreshTrigger={calendarRefreshTrigger} />;
   }
 
   return (
     <div className="app">
-      <header className="app-header">
-        <h1>Chronos</h1>
-        <p className="tagline">Intelligent Constraint-Aware Time Blocking</p>
-        <nav className="nav-tabs">
-          <button className={tasksTabClass} onClick={handleTasksClick}>
-            Tasks
-          </button>
-          <button className={calendarTabClass} onClick={handleCalendarClick}>
-            Calendar
-          </button>
-        </nav>
-      </header>
-
-      <main className="app-main">
-        {activeView === "tasks" && <TaskList />}
-        {activeView === "calendar" && <CalendarView />}
-      </main>
+      <AppHeader
+        activeView={activeView}
+        onSelectTasks={handleSelectTasks}
+        onSelectCalendar={handleSelectCalendar}
+      />
+      <main className="app-main">{mainContent}</main>
     </div>
   );
 }

@@ -15,7 +15,9 @@ class Task(SQLModel, table=True):
     name: str
     estimated_duration_minutes: int = Field(ge=1)
     priority: int = Field(default=0, ge=0)
+    earliest_start: Optional[datetime] = None
     deadline: Optional[datetime] = None
+    preferred_time_of_day: Optional[str] = None
     splittable: bool = False
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)

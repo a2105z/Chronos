@@ -56,7 +56,9 @@
 }
 
 .task-form input[type="text"],
-.task-form input[type="number"] {
+.task-form input[type="number"],
+.task-form input[type="date"],
+.task-form select {
   padding: 0.5rem;
   border: 1px solid #ddd;
   border-radius: 4px;
@@ -76,6 +78,43 @@
   border: none;
   border-radius: 6px;
   cursor: pointer;
+}
+
+.task-date-range-label {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+}
+
+.task-date-range-inputs {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.task-form-error {
+  margin: 0;
+  color: #b42318;
+  font-size: 0.85rem;
+}
+
+.task-duration-label,
+.task-time-pref-label {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+}
+
+.task-duration-inputs {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.task-duration-inputs input {
+  width: 70px;
 }
 
 .task-items {

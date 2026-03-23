@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 
 from sqlmodel import select
 
+from app.models.availability import AvailabilityWindow
 from app.models.constraint import Constraint
 from app.models.task import Task
 from app.schemas.schedule import ScheduledBlockRead
@@ -26,6 +27,15 @@ class SchedulingEngine:
 
     def generate(self, startDate: datetime, endDate: datetime) -> list[ScheduledBlockRead]:
         """Generate schedule for date range. No overlaps, within availability."""
+        if startDate.tzinfo is not None:
+            now = datetime.now(startDate.tzinfo)
+        else:
+            now = datetime.utcnow()
+        if startDate < now:
+            startDate = now
+        if endDate <= startDate:
+            return []
+
         allTasks = self.fetchTasks()
         tasks = []
         for t in allTasks:
@@ -36,7 +46,7 @@ class SchedulingEngine:
 
         windows = getAvailabilityWindows(self.session)
         if not windows:
-            return []
+            windows = self.getFullDayAvailabilityWindows()
 
         constraints = self.fetchConstraints()
         slots = buildAvailableSlots(startDate, endDate, windows, constraints)
@@ -45,6 +55,19 @@ class SchedulingEngine:
 
         allocated = allocateTasks(tasks, slots, constraints)
         return self.toScheduledBlockReads(allocated)
+
+    def getFullDayAvailabilityWindows(self) -> list[AvailabilityWindow]:
+        """Fallback to full-day weekly availability when none is configured."""
+        windows: list[AvailabilityWindow] = []
+        for day in range(7):
+            windows.append(
+                AvailabilityWindow(
+                    day_of_week=day,
+                    start_minutes=0,
+                    end_minutes=1440,
+                )
+            )
+        return windows
 
 
 

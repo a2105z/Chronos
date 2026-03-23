@@ -3,14 +3,10 @@ import { render, screen } from "@testing-library/react";
 import App from "./App";
 
 describe("App", () => {
-  it("renders Chronos title", () => {
+  it("renders the shell with title and navigation tabs", () => {
     render(<App />);
-    expect(screen.getByText("Chronos")).toBeInTheDocument();
-  });
-
-  it("renders Tasks and Calendar tabs", () => {
-    render(<App />);
-    expect(screen.getByText("Tasks")).toBeInTheDocument();
-    expect(screen.getByText("Calendar")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Chronos" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Tasks" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Calendar" })).toBeInTheDocument();
   });
 });

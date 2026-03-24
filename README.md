@@ -20,6 +20,18 @@ Chronos is a constraint-aware scheduling engine that converts a structured task 
 
 ---
 
+## Documentation
+
+Full documentation lives in **[docs/](docs/)**. Start with:
+
+- **[Architecture](docs/ARCHITECTURE.md)** — How everything fits together
+- **[Scheduling Engine](docs/SCHEDULING_ENGINE.md)** — How the greedy algorithm works
+- **[API Reference](docs/API.md)** — All endpoints
+
+See [docs/README.md](docs/README.md) for the full index.
+
+---
+
 ## Tech Stack
 
 | Component | Technology |

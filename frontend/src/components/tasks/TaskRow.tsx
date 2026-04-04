@@ -6,14 +6,19 @@ import { buildTaskMetaLine } from "./formatTaskMeta";
 interface TaskRowProps {
   task: Task;
   onDelete: (taskId: number) => void;
+  onEdit: (task: Task) => void;
 }
 
-export function TaskRow({ task, onDelete }: TaskRowProps) {
+export function TaskRow({ task, onDelete, onEdit }: TaskRowProps) {
   function handleDeleteClick() {
     onDelete(task.id);
   }
 
   const metaLine = buildTaskMetaLine(task);
+
+  function handleEditClick() {
+    onEdit(task);
+  }
 
   return (
     <li className="task-item">
@@ -21,14 +26,19 @@ export function TaskRow({ task, onDelete }: TaskRowProps) {
         <strong>{task.name}</strong>
         <span className="task-meta">{metaLine}</span>
       </div>
-      <button
-        className="btn-danger"
-        type="button"
-        onClick={handleDeleteClick}
-        aria-label="Delete task"
-      >
-        Delete
-      </button>
+      <div className="task-row-actions">
+        <button className="btn-secondary btn-compact" type="button" onClick={handleEditClick}>
+          Edit
+        </button>
+        <button
+          className="btn-danger btn-compact"
+          type="button"
+          onClick={handleDeleteClick}
+          aria-label="Delete task"
+        >
+          Delete
+        </button>
+      </div>
     </li>
   );
 }

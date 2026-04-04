@@ -22,4 +22,10 @@ export {
   updateConstraint,
   deleteConstraint,
 } from "./constraintsApi";
-export { generateSchedule, exportSchedule } from "./scheduleApi";
+export {
+  getSchedule,
+  generateSchedule,
+  moveScheduleBlock,
+  deleteScheduleBlock,
+  exportSchedule,
+} from "./scheduleApi";

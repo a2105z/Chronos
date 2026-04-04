@@ -8,6 +8,7 @@ import type { Task, TaskCreate } from "../../types/task";
 import { DEFAULT_TASK_FORM } from "./taskFormDefaults";
 import { TaskForm } from "./TaskForm";
 import { TaskRow } from "./TaskRow";
+import { TaskEditDialog } from "./TaskEditDialog";
 import "./TaskList.css";
 
 interface TaskListProps {
@@ -50,6 +51,7 @@ function clampMinutesPart(raw: string): number {
 export default function TaskList({ onTaskCreated }: TaskListProps) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState<TaskCreate>(DEFAULT_TASK_FORM);
   const [finishWindowStart, setFinishWindowStart] = useState("");
@@ -128,6 +130,21 @@ export default function TaskList({ onTaskCreated }: TaskListProps) {
     setShowForm(!showForm);
   }
 
+  function handleEditTask(task: Task) {
+    setEditingTask(task);
+  }
+
+  function handleCloseEdit() {
+    setEditingTask(null);
+  }
+
+  function handleSavedEdit() {
+    loadTasks();
+    if (onTaskCreated) {
+      onTaskCreated();
+    }
+  }
+
   function handleNameChange(event: React.ChangeEvent<HTMLInputElement>) {
     setFormData({ ...formData, name: event.target.value });
   }
@@ -198,7 +215,9 @@ export default function TaskList({ onTaskCreated }: TaskListProps) {
   } else {
     for (let i = 0; i < tasks.length; i++) {
       const task = tasks[i];
-      taskItems.push(<TaskRow key={task.id} task={task} onDelete={handleDelete} />);
+      taskItems.push(
+        <TaskRow key={task.id} task={task} onDelete={handleDelete} onEdit={handleEditTask} />
+      );
     }
   }
 
@@ -225,8 +244,16 @@ export default function TaskList({ onTaskCreated }: TaskListProps) {
     );
   }
 
+  let editDialog: ReactNode = null;
+  if (editingTask !== null) {
+    editDialog = (
+      <TaskEditDialog task={editingTask} onClose={handleCloseEdit} onSaved={handleSavedEdit} />
+    );
+  }
+
   return (
     <div className="task-list">
+      {editDialog}
       <div className="task-list-header">
         <h2>Tasks</h2>
         <button className="btn-primary" type="button" onClick={handleToggleForm}>

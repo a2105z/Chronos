@@ -1,7 +1,7 @@
 /** Task CRUD endpoints. */
 
 import { api } from "./instance";
-import type { TaskCreate } from "../types/task";
+import type { TaskCreate, TaskUpdate } from "../types/task";
 
 export function getTasks() {
   return api.get("/tasks");
@@ -11,7 +11,7 @@ export function createTask(data: TaskCreate) {
   return api.post("/tasks", data);
 }
 
-export function updateTask(id: number, data: Partial<TaskCreate>) {
+export function updateTask(id: number, data: TaskUpdate) {
   return api.put(`/tasks/${id}`, data);
 }
 

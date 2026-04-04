@@ -5,6 +5,7 @@ from sqlmodel import Session, select
 
 from app.db import getSession
 from app.models.task import Task
+from app.services.schedule_persistence import deleteBlocksForTask
 from app.schemas.task import TaskCreate, TaskUpdate, TaskRead
 from app.utils import applyPartialUpdate
 
@@ -66,5 +67,7 @@ def deleteTask(task_id: int, session: Session = Depends(getSession)) -> None:
     task = session.get(Task, task_id)
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
+    deleteBlocksForTask(session, task_id)
+    session.flush()
     session.delete(task)
     session.commit()

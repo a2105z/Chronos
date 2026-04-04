@@ -1,4 +1,4 @@
-/** Chronos - main shell with Tasks and Calendar views. */
+/** Chronos — main shell: tasks, availability, constraints, weekly calendar. */
 
 import { useState } from "react";
 import type { ReactNode } from "react";
@@ -6,18 +6,21 @@ import type { AppView } from "./types/app";
 import { AppHeader } from "./components/layout/AppHeader";
 import TaskList from "./components/tasks/TaskList";
 import CalendarView from "./components/calendar/CalendarView";
+import AvailabilityView from "./components/availability/AvailabilityView";
+import ConstraintsView from "./components/constraints/ConstraintsView";
+import { getStartOfWeekMonday } from "./utils/calendarGrid";
 import "./App.css";
 
-function App() {
+export default function App() {
   const [activeView, setActiveView] = useState<AppView>("tasks");
   const [calendarRefreshTrigger, setCalendarRefreshTrigger] = useState(0);
+  const [weekMonday, setWeekMonday] = useState(() => getStartOfWeekMonday());
 
-  function handleSelectTasks() {
-    setActiveView("tasks");
-  }
-
-  function handleSelectCalendar() {
-    setActiveView("calendar");
+  function handleSelectView(view: AppView) {
+    if (view === "calendar" && activeView !== "calendar") {
+      setWeekMonday(getStartOfWeekMonday());
+    }
+    setActiveView(view);
   }
 
   function handleTaskCreated() {
@@ -30,20 +33,26 @@ function App() {
   if (activeView === "tasks") {
     mainContent = <TaskList onTaskCreated={handleTaskCreated} />;
   }
+  if (activeView === "availability") {
+    mainContent = <AvailabilityView />;
+  }
+  if (activeView === "constraints") {
+    mainContent = <ConstraintsView />;
+  }
   if (activeView === "calendar") {
-    mainContent = <CalendarView refreshTrigger={calendarRefreshTrigger} />;
+    mainContent = (
+      <CalendarView
+        refreshTrigger={calendarRefreshTrigger}
+        weekMonday={weekMonday}
+        onWeekChange={setWeekMonday}
+      />
+    );
   }
 
   return (
     <div className="app">
-      <AppHeader
-        activeView={activeView}
-        onSelectTasks={handleSelectTasks}
-        onSelectCalendar={handleSelectCalendar}
-      />
+      <AppHeader activeView={activeView} onSelectView={handleSelectView} />
       <main className="app-main">{mainContent}</main>
     </div>
   );
 }
-
-export default App;

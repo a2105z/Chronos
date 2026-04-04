@@ -22,3 +22,9 @@ class ScheduleGenerateRequest(BaseModel):
     start_date: datetime
     end_date: datetime
     replace_existing: bool = True
+
+
+class ScheduledBlockMove(BaseModel):
+    """Move a block to a new start instant; end time is derived from stored duration."""
+
+    start_time: datetime = Field(..., description="New start datetime for the block")

@@ -24,9 +24,9 @@ The React app entry point. Renders the root `App` component into the DOM.
 ### `App.tsx`
 The main app component. It:
 - Shows a header with the Chronos title and tagline
-- Provides two tabs: **Tasks** and **Calendar**
-- Switches between `TaskList` and `CalendarView` based on the active tab
-- Manages which tab is active with `useState`
+- Provides four sections: **Tasks**, **Availability**, **Constraints**, and **Calendar**
+- Tracks the **Monday-based calendar week** shown in `CalendarView` (reset to “this week” when you open Calendar from another tab)
+- Bumps a `calendarRefreshTrigger` when tasks change so the calendar can reload persisted blocks
 
 ---
 
@@ -35,22 +35,35 @@ The main app component. It:
 ### `TaskList.tsx`
 The task management screen. It lets you:
 - **View** all tasks (loaded from the API on mount)
-- **Create** new tasks via a form (name, duration, priority, splittable)
+- **Create** new tasks via a form (name, duration, priority, preferred time, splittable, finish window)
+- **Edit** tasks via **Edit** → `TaskEditDialog` → `PUT /api/tasks/{id}`
 - **Delete** tasks with a delete button
 
-**State:**
-- `tasks` — list of tasks from the API
-- `loading` — whether we're fetching
-- `showForm` — whether the create form is visible
-- `formData` — current values in the form
-
 **Key functions:**
-- `loadTasks()` — Fetches tasks from `GET /api/tasks`
-- `handleCreate()` — Submits new task via `POST /api/tasks`
-- `handleDelete(id)` — Deletes via `DELETE /api/tasks/{id}`
+- `loadTasks()` — `GET /api/tasks`
+- `handleCreate()` — `POST /api/tasks`
+- `handleDelete(id)` — `DELETE /api/tasks/{id}`
+
+### `TaskEditDialog.tsx`
+Modal editor for an existing task (partial update).
+
+### `AvailabilityView.tsx`
+CRUD for recurring weekly availability windows (`day_of_week` 0 = Monday, `start_minutes` / `end_minutes`).
+
+### `ConstraintsView.tsx`
+Add/remove **protected blocks** and **max continuous work** rules.
 
 ### `CalendarView.tsx`
-A placeholder for the future calendar. Currently shows a simple message: "Calendar view will display generated schedule blocks." It does not yet call the schedule API or display blocks.
+Weekly grid (Monday–Sunday) aligned with backend weekdays. It:
+- Loads persisted blocks with `GET /api/schedule?start_date=&end_date=`
+- **Regenerate** — `POST /api/schedule` for the visible week (replaces overlapping stored blocks)
+- **Move** — `PATCH /api/schedule/blocks/{id}` with a new `start_time` (duration preserved; server validates constraints)
+- **Delete** — `DELETE /api/schedule/blocks/{id}`
+- **Export** — `POST /api/schedule/export` and downloads `chronos_schedule.ics`
+- **Prev / Next week** — changes the range without leaving the page
+
+### `CalendarDayColumn.tsx`
+One day column: scheduled blocks (with actions) and unscheduled tasks for that day.
 
 ---
 
@@ -77,7 +90,10 @@ A centralized place for all API calls. Uses Axios with a base URL of `/api` (so 
 - `deleteConstraint(id)` — DELETE /constraints/{id}
 
 **Schedule:**
-- `generateSchedule(startDate, endDate)` — POST /schedule (returns blocks)
+- `getSchedule(startDate, endDate)` — GET /schedule (persisted blocks in range)
+- `generateSchedule(startDate, endDate)` — POST /schedule (regenerate + persist)
+- `moveScheduleBlock(id, startTimeIso)` — PATCH /schedule/blocks/{id}
+- `deleteScheduleBlock(id)` — DELETE /schedule/blocks/{id}
 - `exportSchedule(startDate, endDate)` — POST /schedule/export (returns .ics blob)
 
 The frontend is configured (in Vite) to proxy `/api` requests to the backend at `localhost:8000`, so the client uses relative URLs.
@@ -89,8 +105,9 @@ The frontend is configured (in Vite) to proxy `/api` requests to the backend at 
 TypeScript type definitions that match the backend schemas.
 
 ### `task.ts`
-- **Task** — Full task object (id, name, estimated_duration_minutes, priority, deadline, splittable, etc.)
-- **TaskCreate** — What you send when creating (name, duration, priority, splittable; no id)
+- **Task** — Full task object (id, name, estimated_duration_minutes, priority, optional earliest_start/deadline, splittable, etc.)
+- **TaskCreate** — Create payload
+- **TaskUpdate** — Partial update payload for `PUT /api/tasks/{id}`
 
 ### `availability.ts`
 - **AvailabilityWindow** — day_of_week, start_minutes, end_minutes, id
@@ -112,7 +129,9 @@ These types ensure the frontend and backend agree on data shapes and catch mista
 
 - **App.css** — Global app styles, header, nav tabs
 - **TaskList.css** — Task list layout, form styling, buttons
-- **CalendarView.css** — Calendar placeholder styling
+- **CalendarView.css** — Weekly grid, block cards, move dialog
+- **AvailabilityView.css**, **ConstraintsView.css** — Panel forms
+- **TaskEditDialog.css** — Modal overlay
 - **index.css** — Base styles (resets, fonts)
 
 ---
@@ -122,23 +141,25 @@ These types ensure the frontend and backend agree on data shapes and catch mista
 | File | Purpose |
 |------|---------|
 | `main.tsx` | React entry point |
-| `App.tsx` | Root component, tab switching |
-| `components/TaskList.tsx` | Task list, create, delete |
-| `components/CalendarView.tsx` | Placeholder for schedule display |
-| `api/client.ts` | All API calls |
-| `types/task.ts` | Task types |
+| `App.tsx` | Root layout, four-way navigation, calendar week state |
+| `components/tasks/TaskList.tsx` | Task list, create, edit, delete |
+| `components/tasks/TaskEditDialog.tsx` | Edit task modal |
+| `components/availability/AvailabilityView.tsx` | Availability CRUD |
+| `components/constraints/ConstraintsView.tsx` | Constraints CRUD |
+| `components/calendar/CalendarView.tsx` | Weekly schedule, regenerate, move/delete, export |
+| `components/calendar/CalendarDayColumn.tsx` | Single-day column |
+| `api/client.ts` | Re-exports API modules |
+| `api/scheduleApi.ts` | Schedule + block endpoints |
+| `types/app.ts` | `AppView` union |
+| `types/task.ts` | Task / TaskCreate / TaskUpdate |
 | `types/availability.ts` | Availability types |
 | `types/constraint.ts` | Constraint types |
-| `types/schedule.ts` | Schedule types |
+| `types/schedule.ts` | ScheduledBlock |
 
 ---
 
-## What's Not Yet Built
+## Possible follow-ups
 
-- **CalendarView** — Does not yet call `generateSchedule()` or display blocks. It's a placeholder.
-- **Availability UI** — No screen to add/edit availability windows yet. Only tasks are managed in the UI.
-- **Constraints UI** — No screen to add/edit constraints yet.
-- **Schedule request UI** — No date picker or "Generate Schedule" button that calls the API.
-- **.ics download** — No button to export the schedule as a file.
-
-These will be covered in later weeks (Frontend integration, Calendar view, etc.).
+- **Drag-and-drop** block moves (currently explicit Move dialog + server validation).
+- **FullCalendar** integration if you want a month/agenda layout in addition to the weekly grid.
+- **Inline edit** for availability and constraints (currently add/remove; backend supports `PUT`).

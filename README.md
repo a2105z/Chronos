@@ -153,8 +153,8 @@ npm test
 | 3 | Availability & constraints modeling | ✅ |
 | 4 | Core scheduling engine (baseline) | ✅ |
 | 5 | Constraint enforcement, unit tests | ✅ |
-| 6 | Frontend integration | |
-| 7 | Calendar view & manual editing | |
+| 6 | Frontend integration | ✅ |
+| 7 | Calendar view & manual editing | ✅ |
 | 8 | .ics export, cross-platform testing | |
 | 9 | Refinement, edge cases | |
 | 10 | Testing, documentation, demo prep | |

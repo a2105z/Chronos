@@ -27,25 +27,27 @@ def test_generate_schedule_empty_no_tasks(client: TestClient):
     )
     response = client.post(
         "/api/schedule",
-        json={"start_date": mkDt("2025-01-06"), "end_date": mkDt("2025-01-12")},
+        json={"start_date": mkDt("2030-01-07"), "end_date": mkDt("2030-01-13")},
     )
     assert response.status_code == 200
     assert response.json() == []
 
 
 
-def test_generate_schedule_empty_no_availability(client: TestClient):
-    """Generate returns empty when no availability windows."""
+def test_generate_schedule_fallback_availability_when_none_configured(client: TestClient):
+    """With no availability rows, engine uses full-week fallback and can still place tasks."""
     client.post(
         "/api/tasks",
         json={"name": "Task A", "estimated_duration_minutes": 60},
     )
     response = client.post(
         "/api/schedule",
-        json={"start_date": mkDt("2025-01-06"), "end_date": mkDt("2025-01-12")},
+        json={"start_date": mkDt("2030-01-07"), "end_date": mkDt("2030-01-13")},
     )
     assert response.status_code == 200
-    assert response.json() == []
+    blocks = response.json()
+    assert len(blocks) >= 1
+    assert blocks[0]["task_name"] == "Task A"
 
 
 
@@ -61,7 +63,7 @@ def test_generate_schedule_single_task(client: TestClient):
     )
     response = client.post(
         "/api/schedule",
-        json={"start_date": mkDt("2025-01-06"), "end_date": mkDt("2025-01-10")},
+        json={"start_date": mkDt("2030-01-07"), "end_date": mkDt("2030-01-11")},
     )
     assert response.status_code == 200
     blocks = response.json()
@@ -89,7 +91,7 @@ def test_generate_schedule_no_overlap(client: TestClient):
     )
     response = client.post(
         "/api/schedule",
-        json={"start_date": mkDt("2025-01-06"), "end_date": mkDt("2025-01-10")},
+        json={"start_date": mkDt("2030-01-07"), "end_date": mkDt("2030-01-11")},
     )
     assert response.status_code == 200
     blocks = response.json()
@@ -111,7 +113,7 @@ def test_generate_schedule_within_availability(client: TestClient):
     )
     response = client.post(
         "/api/schedule",
-        json={"start_date": mkDt("2025-01-06"), "end_date": mkDt("2025-01-08")},
+        json={"start_date": mkDt("2030-01-07"), "end_date": mkDt("2030-01-09")},
     )
     assert response.status_code == 200
     blocks = response.json()
@@ -144,7 +146,7 @@ def test_generate_schedule_respects_protected_block(client: TestClient):
     )
     response = client.post(
         "/api/schedule",
-        json={"start_date": mkDt("2025-01-06"), "end_date": mkDt("2025-01-08")},
+        json={"start_date": mkDt("2030-01-07"), "end_date": mkDt("2030-01-09")},
     )
     assert response.status_code == 200
     blocks = response.json()
@@ -168,7 +170,7 @@ def test_generate_schedule_splittable_task(client: TestClient):
     )
     response = client.post(
         "/api/schedule",
-        json={"start_date": mkDt("2025-01-06"), "end_date": mkDt("2025-01-08")},
+        json={"start_date": mkDt("2030-01-07"), "end_date": mkDt("2030-01-09")},
     )
     assert response.status_code == 200
     blocks = []
@@ -193,9 +195,13 @@ def test_generate_schedule_export_ics(client: TestClient):
         "/api/availability",
         json={"day_of_week": 0, "start_minutes": 540, "end_minutes": 1020},
     )
+    client.post(
+        "/api/schedule",
+        json={"start_date": mkDt("2030-01-07"), "end_date": mkDt("2030-01-11")},
+    )
     response = client.post(
         "/api/schedule/export",
-        json={"start_date": mkDt("2025-01-06"), "end_date": mkDt("2025-01-10")},
+        json={"start_date": mkDt("2030-01-07"), "end_date": mkDt("2030-01-11")},
     )
     assert response.status_code == 200
     assert "text/calendar" in response.headers.get("content-type", "")
@@ -221,7 +227,7 @@ def test_invariants_max_continuous_work_splittable(client: TestClient):
     )
     response = client.post(
         "/api/schedule",
-        json={"start_date": mkDt("2025-01-06"), "end_date": mkDt("2025-01-08")},
+        json={"start_date": mkDt("2030-01-07"), "end_date": mkDt("2030-01-09")},
     )
     assert response.status_code == 200
     blocks = response.json()
@@ -250,7 +256,7 @@ def test_invariants_max_continuous_work_non_splittable(client: TestClient):
     )
     response = client.post(
         "/api/schedule",
-        json={"start_date": mkDt("2025-01-06"), "end_date": mkDt("2025-01-08")},
+        json={"start_date": mkDt("2030-01-07"), "end_date": mkDt("2030-01-09")},
     )
     assert response.status_code == 200
     blocks = response.json()
@@ -296,7 +302,7 @@ def test_invariants_all_constraints_combined(client: TestClient):
     )
     response = client.post(
         "/api/schedule",
-        json={"start_date": mkDt("2025-01-06"), "end_date": mkDt("2025-01-10")},
+        json={"start_date": mkDt("2030-01-07"), "end_date": mkDt("2030-01-11")},
     )
     assert response.status_code == 200
     blocks = response.json()
@@ -304,3 +310,41 @@ def test_invariants_all_constraints_combined(client: TestClient):
     validateWithinAvailability(blocks, windows)
     validateNoProtectedOverlap(blocks, protected)
     validateMaxContinuousWork(blocks, 60)
+
+
+def test_move_block_rejected_when_overlapping(client: TestClient):
+    """PATCH block with invalid time returns 422."""
+    client.post("/api/tasks", json={"name": "A", "estimated_duration_minutes": 60})
+    client.post("/api/tasks", json={"name": "B", "estimated_duration_minutes": 60})
+    client.post("/api/availability", json={"day_of_week": 0, "start_minutes": 540, "end_minutes": 1020})
+    gen = client.post(
+        "/api/schedule",
+        json={"start_date": mkDt("2030-01-07"), "end_date": mkDt("2030-01-09")},
+    )
+    blocks = gen.json()
+    assert len(blocks) >= 2
+    blockA = next(b for b in blocks if b["task_name"] == "A")
+    blockB = next(b for b in blocks if b["task_name"] == "B")
+    badStart = blockB["start_time"]
+    resp = client.patch(f"/api/schedule/blocks/{blockA['id']}", json={"start_time": badStart})
+    assert resp.status_code == 422
+
+
+def test_delete_block_then_get_excludes_it(client: TestClient):
+    """DELETE removes a persisted block."""
+    client.post("/api/tasks", json={"name": "Only", "estimated_duration_minutes": 30})
+    client.post("/api/availability", json={"day_of_week": 0, "start_minutes": 540, "end_minutes": 1020})
+    gen = client.post(
+        "/api/schedule",
+        json={"start_date": mkDt("2030-01-07"), "end_date": mkDt("2030-01-09")},
+    )
+    blocks = gen.json()
+    assert len(blocks) == 1
+    bid = blocks[0]["id"]
+    delResp = client.delete(f"/api/schedule/blocks/{bid}")
+    assert delResp.status_code == 204
+    listed = client.get(
+        "/api/schedule",
+        params={"start_date": mkDt("2030-01-07"), "end_date": mkDt("2030-01-09")},
+    )
+    assert listed.json() == []

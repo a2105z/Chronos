@@ -1,30 +1,29 @@
-/** Top navigation between Tasks and Calendar. */
+/** Primary navigation between app sections. */
 
 import type { AppView } from "../../types/app";
 
 interface AppNavProps {
   activeView: AppView;
-  onSelectTasks: () => void;
-  onSelectCalendar: () => void;
+  onSelectView: (view: AppView) => void;
 }
 
-export function AppNav({ activeView, onSelectTasks, onSelectCalendar }: AppNavProps) {
-  let tasksTabClassName = "";
-  if (activeView === "tasks") {
-    tasksTabClassName = "active";
-  }
-
-  let calendarTabClassName = "";
-  if (activeView === "calendar") {
-    calendarTabClassName = "active";
+export function AppNav({ activeView, onSelectView }: AppNavProps) {
+  function tabClass(view: AppView): string {
+    return activeView === view ? "active" : "";
   }
 
   return (
     <nav className="nav-tabs">
-      <button type="button" className={tasksTabClassName} onClick={onSelectTasks}>
+      <button type="button" className={tabClass("tasks")} onClick={() => onSelectView("tasks")}>
         Tasks
       </button>
-      <button type="button" className={calendarTabClassName} onClick={onSelectCalendar}>
+      <button type="button" className={tabClass("availability")} onClick={() => onSelectView("availability")}>
+        Availability
+      </button>
+      <button type="button" className={tabClass("constraints")} onClick={() => onSelectView("constraints")}>
+        Constraints
+      </button>
+      <button type="button" className={tabClass("calendar")} onClick={() => onSelectView("calendar")}>
         Calendar
       </button>
     </nav>

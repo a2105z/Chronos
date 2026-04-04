@@ -1,4 +1,4 @@
-/** One day cell in the three-week schedule grid. */
+/** One day cell in the weekly schedule grid. */
 
 import type { ReactElement } from "react";
 import type { Task } from "../../types/task";
@@ -10,6 +10,8 @@ interface CalendarDayColumnProps {
   isPastDay: boolean;
   dayBlocks: ScheduledBlock[];
   unscheduledTasks: Task[];
+  onMoveBlock?: (block: ScheduledBlock) => void;
+  onDeleteBlock?: (blockId: number) => void;
 }
 
 export function CalendarDayColumn({
@@ -17,6 +19,8 @@ export function CalendarDayColumn({
   isPastDay,
   dayBlocks,
   unscheduledTasks,
+  onMoveBlock,
+  onDeleteBlock,
 }: CalendarDayColumnProps) {
   let sectionClassName = "calendar-day";
   if (isPastDay) {
@@ -35,6 +39,8 @@ export function CalendarDayColumn({
     emptyMessage = <p className="calendar-day-empty">No blocks</p>;
   }
 
+  const canEditBlocks = !isPastDay && onMoveBlock !== undefined && onDeleteBlock !== undefined;
+
   let blockList = null;
   if (hasBlocks) {
     const items: ReactElement[] = [];
@@ -42,6 +48,19 @@ export function CalendarDayColumn({
       const block = dayBlocks[i];
       const startLabel = formatTimeFromIso(block.start_time);
       const endLabel = formatTimeFromIso(block.end_time);
+      let actions: ReactElement | null = null;
+      if (canEditBlocks) {
+        actions = (
+          <div className="schedule-block-actions">
+            <button type="button" className="btn-link" onClick={() => onMoveBlock(block)}>
+              Move
+            </button>
+            <button type="button" className="btn-link danger" onClick={() => onDeleteBlock(block.id)}>
+              Delete
+            </button>
+          </div>
+        );
+      }
       items.push(
         <li key={block.id} className="schedule-block-item">
           <div className="schedule-block-main">
@@ -51,6 +70,7 @@ export function CalendarDayColumn({
           <div className="schedule-block-time">
             {startLabel} - {endLabel}
           </div>
+          {actions}
         </li>
       );
     }

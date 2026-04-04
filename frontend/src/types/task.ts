@@ -6,7 +6,7 @@ export interface Task {
   estimated_duration_minutes: number;
   priority: number;
   earliest_start?: string | null;
-  deadline: string | null;
+  deadline?: string | null;
   preferred_time_of_day?: PreferredTimeOfDay;
   splittable: boolean;
   created_at: string;
@@ -22,3 +22,6 @@ export interface TaskCreate {
   preferred_time_of_day?: PreferredTimeOfDay;
   splittable?: boolean;
 }
+
+/** Partial update payload for PUT /api/tasks/:id */
+export type TaskUpdate = Partial<TaskCreate>;

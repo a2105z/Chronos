@@ -5,20 +5,15 @@ import { AppNav } from "./AppNav";
 
 interface AppHeaderProps {
   activeView: AppView;
-  onSelectTasks: () => void;
-  onSelectCalendar: () => void;
+  onSelectView: (view: AppView) => void;
 }
 
-export function AppHeader({ activeView, onSelectTasks, onSelectCalendar }: AppHeaderProps) {
+export function AppHeader({ activeView, onSelectView }: AppHeaderProps) {
   return (
     <header className="app-header">
       <h1>Chronos</h1>
       <p className="tagline">Intelligent Constraint-Aware Time Blocking</p>
-      <AppNav
-        activeView={activeView}
-        onSelectTasks={onSelectTasks}
-        onSelectCalendar={onSelectCalendar}
-      />
+      <AppNav activeView={activeView} onSelectView={onSelectView} />
     </header>
   );
 }

@@ -45,6 +45,30 @@
   background: #c82333;
 }
 
+.btn-secondary {
+  padding: 0.25rem 0.5rem;
+  background: #fff;
+  color: #1a1a2e;
+  border: 1px solid #1a1a2e;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.btn-secondary:hover {
+  background: #f0f0f5;
+}
+
+.task-row-actions {
+  display: flex;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.btn-compact {
+  white-space: nowrap;
+}
+
 .task-form {
   display: flex;
   flex-wrap: wrap;

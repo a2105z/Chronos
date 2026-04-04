@@ -10,11 +10,11 @@ from app.schemas.constraint import (
     ConstraintType,
     ConstraintUpdate,
 )
-from app.schemas.schedule import ScheduledBlockRead, ScheduleGenerateRequest
+from app.schemas.schedule import ScheduledBlockMove, ScheduledBlockRead, ScheduleGenerateRequest
 
 __all__ = [
     "TaskCreate", "TaskUpdate", "TaskRead",
     "AvailabilityCreate", "AvailabilityRead", "AvailabilityUpdate",
     "ConstraintCreate", "ConstraintRead", "ConstraintType", "ConstraintUpdate",
-    "ScheduledBlockRead", "ScheduleGenerateRequest",
+    "ScheduledBlockMove", "ScheduledBlockRead", "ScheduleGenerateRequest",
 ]

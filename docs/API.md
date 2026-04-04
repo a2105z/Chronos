@@ -223,6 +223,15 @@ DELETE /api/constraints/{constraint_id}
 
 ## Schedule
 
+### List persisted schedule blocks
+```
+GET /api/schedule?start_date=...&end_date=...
+```
+
+Returns scheduled blocks that overlap the given time range (without running the scheduler). `start_date` and `end_date` are ISO datetimes (query parameters).
+
+---
+
 ### Generate schedule
 ```
 POST /api/schedule
@@ -244,6 +253,8 @@ Content-Type: application/json
 }
 ```
 
+**Behavior:** Recomputes the schedule for the range, **replaces** any persisted blocks that overlap the same range, and returns the new blocks (with real database ids).
+
 **Response:** Array of scheduled blocks:
 ```json
 [
@@ -261,19 +272,44 @@ Content-Type: application/json
 
 ---
 
+### Move a scheduled block
+```
+PATCH /api/schedule/blocks/{block_id}
+Content-Type: application/json
+```
+
+**Body:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| start_time | ISO datetime | Yes | New start; end time is inferred from the block’s stored duration |
+
+**Response:** Updated block. **422** if the move would overlap another block, fall outside availability, hit a protected block, exceed max continuous work, or violate the task’s earliest start / deadline / time-of-day preference.
+
+---
+
+### Delete a scheduled block
+```
+DELETE /api/schedule/blocks/{block_id}
+```
+
+**Response:** 204 No Content.
+
+---
+
 ### Export schedule as .ics
 ```
 POST /api/schedule/export
 Content-Type: application/json
 ```
 
-**Body:** Same as generate schedule (start_date, end_date).
+**Body:** Same as generate schedule (`start_date`, `end_date`).
 
-**Response:** Binary .ics file.  
+**Response:** Binary .ics file built from **persisted** blocks in that range (does not regenerate).  
 Content-Type: `text/calendar`  
 Content-Disposition: `attachment; filename=chronos_schedule.ics`
 
-You can import this into Google Calendar, Apple Calendar, Outlook, etc.
+Generate or regenerate the schedule first if you need events in the file. You can import the export into Google Calendar, Apple Calendar, Outlook, etc.
 
 ---
 

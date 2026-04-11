@@ -19,6 +19,7 @@ Chronos turns your **to-do list** into a **realistic schedule**. You tell it wha
 | [Frontend](FRONTEND.md) | The React app: components, API client, and how users interact with Chronos. |
 | [Scheduling Engine](SCHEDULING_ENGINE.md) | **The brain of Chronos** — how the greedy algorithm works, step by step. Read this to understand how schedules are built. |
 | [API Reference](API.md) | All endpoints, request/response formats, and how to call the API. |
+| [Cross-Platform Testing](CROSS_PLATFORM_TESTING.md) | Automated + manual validation for `.ics` import behavior on Apple Calendar, Outlook, and Google Calendar. |
 
 ---
 

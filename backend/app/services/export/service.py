@@ -1,5 +1,7 @@
 """Export scheduled blocks to .ics format for calendar apps."""
 
+from datetime import datetime, timezone
+
 from icalendar import Calendar, Event
 
 from app.schemas.schedule import ScheduledBlockRead
@@ -17,6 +19,10 @@ class ExportService:
 
         for block in blocks:
             event = Event()
+            # UID/DTSTAMP make imports and duplicate handling more reliable
+            uid = f"chronos-{block.id}-{block.task_id}-{block.start_time.isoformat()}@chronos.local"
+            event.add("uid", uid)
+            event.add("dtstamp", datetime.now(timezone.utc))
             event.add("summary", block.task_name)
             event.add("dtstart", block.start_time)
             event.add("dtend", block.end_time)

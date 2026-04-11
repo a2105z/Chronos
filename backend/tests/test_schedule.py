@@ -4,6 +4,7 @@ from datetime import datetime
 
 import pytest
 from fastapi.testclient import TestClient
+from icalendar import Calendar
 
 from app.services.scheduler.constraints import (
     validateMaxContinuousWork,
@@ -186,7 +187,7 @@ def test_generate_schedule_splittable_task(client: TestClient):
 
 
 def test_generate_schedule_export_ics(client: TestClient):
-    """Export returns valid .ics file."""
+    """Export returns valid .ics file with standard headers."""
     client.post(
         "/api/tasks",
         json={"name": "Export Test", "estimated_duration_minutes": 30},
@@ -205,9 +206,68 @@ def test_generate_schedule_export_ics(client: TestClient):
     )
     assert response.status_code == 200
     assert "text/calendar" in response.headers.get("content-type", "")
+    disposition = response.headers.get("content-disposition", "")
+    assert "attachment;" in disposition
+    assert "chronos_schedule.ics" in disposition
     content = response.content
     assert b"BEGIN:VCALENDAR" in content
     assert b"END:VCALENDAR" in content
+
+
+def test_export_ics_round_trip_has_events(client: TestClient):
+    """Export can be parsed by icalendar and contains expected event fields."""
+    client.post(
+        "/api/tasks",
+        json={"name": "Calendar Interop", "estimated_duration_minutes": 45},
+    )
+    client.post(
+        "/api/availability",
+        json={"day_of_week": 0, "start_minutes": 540, "end_minutes": 1020},
+    )
+    client.post(
+        "/api/schedule",
+        json={"start_date": mkDt("2030-01-07"), "end_date": mkDt("2030-01-11")},
+    )
+
+    response = client.post(
+        "/api/schedule/export",
+        json={"start_date": mkDt("2030-01-07"), "end_date": mkDt("2030-01-11")},
+    )
+    assert response.status_code == 200
+
+    parsed = Calendar.from_ical(response.content)
+    events = [component for component in parsed.walk() if component.name == "VEVENT"]
+    assert len(events) >= 1
+    first = events[0]
+    assert "SUMMARY" in first
+    assert "DTSTART" in first
+    assert "DTEND" in first
+    assert "UID" in first
+    assert "DTSTAMP" in first
+
+
+def test_export_ics_uses_crlf_line_endings(client: TestClient):
+    """RFC5545-style CRLF line endings help compatibility across calendar clients."""
+    client.post(
+        "/api/tasks",
+        json={"name": "Line Endings", "estimated_duration_minutes": 30},
+    )
+    client.post(
+        "/api/availability",
+        json={"day_of_week": 0, "start_minutes": 540, "end_minutes": 1020},
+    )
+    client.post(
+        "/api/schedule",
+        json={"start_date": mkDt("2030-01-07"), "end_date": mkDt("2030-01-11")},
+    )
+
+    response = client.post(
+        "/api/schedule/export",
+        json={"start_date": mkDt("2030-01-07"), "end_date": mkDt("2030-01-11")},
+    )
+    assert response.status_code == 200
+    content = response.content
+    assert b"\r\n" in content
 
 
 

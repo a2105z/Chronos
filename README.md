@@ -155,7 +155,7 @@ npm test
 | 5 | Constraint enforcement, unit tests | ✅ |
 | 6 | Frontend integration | ✅ |
 | 7 | Calendar view & manual editing | ✅ |
-| 8 | .ics export, cross-platform testing | |
+| 8 | .ics export, cross-platform testing | ✅ |
 | 9 | Refinement, edge cases | |
 | 10 | Testing, documentation, demo prep | |
 
@@ -165,10 +165,10 @@ npm test
 
 | Role | Responsibility |
 |------|----------------|
-| Frontend Lead (Josh) | React UI, calendar, user flows |
-| Backend Lead (Anjay) | API, database, validation |
-| Scheduling Engine Lead (Aarav) | Algorithm, constraint handling |
-| Export & Integration Lead (Ojas Bankhele) | .ics export, system integration |
+| Frontend Lead (Ojas Bankhele) | React UI, calendar, user flows |
+| Backend Lead (Anjay Krishna) | API, database, validation |
+| Scheduling Engine Lead (Aarav Mittal) | Algorithm, constraint handling |
+| Export & Integration Lead (Josh Olmos) | .ics export, system integration |
 
 ---
 

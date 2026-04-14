@@ -1,42 +1,28 @@
-# Chronos Documentation
+# Chronos Docs
 
-Welcome! This folder contains documentation that explains Chronos from the ground up. Whether you're new to the project or diving into a specific part, start here.
+Everything project-related lives in this folder so it is easy to navigate in one place.
 
----
+## Start here
 
-## What is Chronos?
+1. Read `ARCHITECTURE.md` for the system overview.
+2. Read `BACKEND.md` and `FRONTEND.md` for implementation details.
+3. Read `SCHEDULING_ENGINE.md` to understand scheduling behavior.
 
-Chronos turns your **to-do list** into a **realistic schedule**. You tell it what you need to do, when you're free, and any rules (like "no work longer than an hour without a break" or "lunch is always blocked"). Chronos then figures out *when* to do each task so nothing overlaps and everything fits.
+## Doc index
 
----
+- `ARCHITECTURE.md` - high-level system layout and data flow
+- `BACKEND.md` - FastAPI app structure, routes, and services
+- `FRONTEND.md` - React app structure, views, and API usage
+- `SCHEDULING_ENGINE.md` - how tasks are ordered and allocated
+- `API.md` - endpoint reference with request/response examples
+- `CROSS_PLATFORM_TESTING.md` - `.ics` import checks for Apple/Outlook/Google
+- `TESTING.md` - backend, frontend, and manual test checklist
+- `DEMO_PREP.md` - short runbook for demos
 
-## Documentation Index
+## Core terms
 
-| Document | What it covers |
-|----------|----------------|
-| [Architecture](ARCHITECTURE.md) | How the frontend, backend, database, and scheduler fit together. Start here for the big picture. |
-| [Backend](BACKEND.md) | The Python API: tasks, availability, constraints, and how data flows through the server. |
-| [Frontend](FRONTEND.md) | The React app: components, API client, and how users interact with Chronos. |
-| [Scheduling Engine](SCHEDULING_ENGINE.md) | **The brain of Chronos** — how the greedy algorithm works, step by step. Read this to understand how schedules are built. |
-| [API Reference](API.md) | All endpoints, request/response formats, and how to call the API. |
-| [Cross-Platform Testing](CROSS_PLATFORM_TESTING.md) | Automated + manual validation for `.ics` import behavior on Apple Calendar, Outlook, and Google Calendar. |
-
----
-
-## Quick Start
-
-1. Read [Architecture](ARCHITECTURE.md) for the overview.
-2. Skim [Backend](BACKEND.md) and [Frontend](FRONTEND.md) to see what each side does.
-3. Dive into [Scheduling Engine](SCHEDULING_ENGINE.md) to understand how scheduling actually works.
-
----
-
-## Glossary
-
-| Term | Meaning |
-|------|---------|
-| **Task** | Something you need to do. Has a name, estimated duration, optional deadline, and can be splittable or not. |
-| **Availability window** | A recurring block of time when you're free (e.g., "Monday 9am–5pm"). |
-| **Constraint** | A rule the scheduler must obey. Examples: protected blocks (lunch), max continuous work (60 min cap). |
-| **Slot** | A 15-minute chunk of time that the scheduler can assign work to. |
-| **Block** | A scheduled chunk of time assigned to a task. The output of the scheduler. |
+- **Task**: unit of work with duration and optional constraints
+- **Availability window**: recurring free time (`day_of_week`, start, end)
+- **Constraint**: scheduling rule (protected block or max continuous work)
+- **Slot**: 15-minute candidate interval
+- **Block**: persisted scheduled interval assigned to a task

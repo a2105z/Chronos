@@ -22,13 +22,15 @@ Chronos is a constraint-aware scheduling engine that converts a structured task 
 
 ## Documentation
 
-Full documentation lives in **[docs/](docs/)**. Start with:
+All project docs are in **[docs/](docs/)**. Start with:
 
 - **[Architecture](docs/ARCHITECTURE.md)** — How everything fits together
 - **[Scheduling Engine](docs/SCHEDULING_ENGINE.md)** — How the greedy algorithm works
 - **[API Reference](docs/API.md)** — All endpoints
+- **[Testing Guide](docs/TESTING.md)** — Backend, frontend, and manual validation flow
+- **[Demo Prep](docs/DEMO_PREP.md)** — Demo runbook and readiness checklist
 
-See [docs/README.md](docs/README.md) for the full index.
+See [docs/README.md](docs/README.md) for the full index and quick links.
 
 ---
 
@@ -71,6 +73,10 @@ Chronos/
 │   │   └── App.tsx
 │   ├── package.json
 │   └── vite.config.ts
+├── tests/
+│   ├── README.md              # Root test hub and commands
+│   └── manual/
+│       └── demo_checklist.md  # Demo-day manual acceptance checklist
 └── .github/
     └── workflows/
         └── ci.yml
@@ -144,7 +150,7 @@ npm test
 
 ---
 
-## Development Schedule (10 Weeks)
+## Development Schedule (9 Weeks)
 
 | Week | Focus | Status |
 |------|-------|--------|
@@ -156,8 +162,7 @@ npm test
 | 6 | Frontend integration | ✅ |
 | 7 | Calendar view & manual editing | ✅ |
 | 8 | .ics export, cross-platform testing | ✅ |
-| 9 | Refinement, edge cases | |
-| 10 | Testing, documentation, demo prep | |
+| 9 | Refinement, edge cases, testing, documentation, demo prep | ✅ |
 
 ---
 
@@ -166,7 +171,7 @@ npm test
 | Role | Responsibility |
 |------|----------------|
 | Frontend Lead (Ojas Bankhele) | React UI, calendar, user flows |
-| Backend Lead (Anjay Krishna) | API, database, validation |
+| Backend Lead (Anjay Krishna) | API, database, testing, documentation |
 | Scheduling Engine Lead (Aarav Mittal) | Algorithm, constraint handling |
 | Export & Integration Lead (Josh Olmos) | .ics export, system integration |
 

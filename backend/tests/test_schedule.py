@@ -270,6 +270,86 @@ def test_export_ics_uses_crlf_line_endings(client: TestClient):
     assert b"\r\n" in content
 
 
+def test_generate_schedule_respects_earliest_start(client: TestClient):
+    """Task should not be scheduled before earliest_start."""
+    client.post(
+        "/api/tasks",
+        json={
+            "name": "Earliest Window",
+            "estimated_duration_minutes": 60,
+            "earliest_start": "2030-01-07T13:00:00",
+        },
+    )
+    client.post(
+        "/api/availability",
+        json={"day_of_week": 0, "start_minutes": 540, "end_minutes": 1020},
+    )
+
+    response = client.post(
+        "/api/schedule",
+        json={"start_date": mkDt("2030-01-07"), "end_date": mkDt("2030-01-09")},
+    )
+    assert response.status_code == 200
+    blocks = [b for b in response.json() if b["task_name"] == "Earliest Window"]
+    assert len(blocks) == 1
+    assert blocks[0]["start_time"] >= "2030-01-07T13:00:00"
+
+
+def test_generate_schedule_skips_task_when_deadline_missed(client: TestClient):
+    """Task is not scheduled when every possible slot ends after its deadline."""
+    client.post(
+        "/api/tasks",
+        json={
+            "name": "Impossible Deadline",
+            "estimated_duration_minutes": 60,
+            "deadline": "2030-01-07T08:30:00",
+        },
+    )
+    client.post(
+        "/api/tasks",
+        json={"name": "Feasible Task", "estimated_duration_minutes": 60},
+    )
+    client.post(
+        "/api/availability",
+        json={"day_of_week": 0, "start_minutes": 540, "end_minutes": 660},
+    )
+
+    response = client.post(
+        "/api/schedule",
+        json={"start_date": mkDt("2030-01-07"), "end_date": mkDt("2030-01-09")},
+    )
+    assert response.status_code == 200
+    names = [b["task_name"] for b in response.json()]
+    assert "Impossible Deadline" not in names
+    assert "Feasible Task" in names
+
+
+def test_generate_schedule_respects_preferred_time_of_day(client: TestClient):
+    """Morning-preference task should be placed before noon when slots exist."""
+    client.post(
+        "/api/tasks",
+        json={
+            "name": "Morning Deep Work",
+            "estimated_duration_minutes": 60,
+            "preferred_time_of_day": "morning",
+        },
+    )
+    client.post(
+        "/api/availability",
+        json={"day_of_week": 0, "start_minutes": 480, "end_minutes": 1080},
+    )
+
+    response = client.post(
+        "/api/schedule",
+        json={"start_date": mkDt("2030-01-07"), "end_date": mkDt("2030-01-09")},
+    )
+    assert response.status_code == 200
+    blocks = [b for b in response.json() if b["task_name"] == "Morning Deep Work"]
+    assert len(blocks) == 1
+    start = datetime.fromisoformat(blocks[0]["start_time"])
+    assert 6 <= start.hour < 12
+
+
 
 def test_invariants_max_continuous_work_splittable(client: TestClient):
     """Splittable task respects max_continuous_work. No block exceeds limit."""

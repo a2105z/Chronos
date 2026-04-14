@@ -1,322 +1,82 @@
 # API Reference
 
-This document describes the REST API exposed by the Chronos backend. All endpoints are under `/api` and return JSON unless noted.
+Base URL (local): `http://localhost:8000`  
+Swagger docs: `http://localhost:8000/docs`
 
-**Base URL (local):** `http://localhost:8000`
-
-**Interactive docs:** `http://localhost:8000/docs` (Swagger UI)
-
----
+All endpoints are under `/api`.
 
 ## Tasks
 
-### List tasks
-```
-GET /api/tasks
-```
-Returns all tasks, newest first.
+- `GET /api/tasks`
+- `POST /api/tasks`
+- `GET /api/tasks/{task_id}`
+- `PUT /api/tasks/{task_id}`
+- `DELETE /api/tasks/{task_id}`
 
-**Response:** Array of task objects.
+Create/update fields:
 
----
-
-### Create task
-```
-POST /api/tasks
-Content-Type: application/json
-```
-
-**Body:**
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| name | string | Yes | Task name |
-| estimated_duration_minutes | integer | Yes | Duration in minutes (min 1) |
-| priority | integer | No | Default 0. Higher = more important. |
-| deadline | ISO datetime string | No | When the task must be done. |
-| splittable | boolean | No | Default false. If true, task can span multiple blocks. |
-
-**Example:**
-```json
-{
-  "name": "Study for exam",
-  "estimated_duration_minutes": 120,
-  "priority": 1,
-  "splittable": true
-}
-```
-
-**Response:** Created task with id, timestamps, etc.
-
----
-
-### Get task
-```
-GET /api/tasks/{task_id}
-```
-Returns a single task by ID.
-
-**Response:** Task object or 404.
-
----
-
-### Update task
-```
-PUT /api/tasks/{task_id}
-Content-Type: application/json
-```
-Partial updates supported. Only include fields you want to change.
-
-**Example:**
-```json
-{
-  "name": "Study for final exam",
-  "estimated_duration_minutes": 90
-}
-```
-
-**Response:** Updated task.
-
----
-
-### Delete task
-```
-DELETE /api/tasks/{task_id}
-```
-**Response:** 204 No Content on success, 404 if not found.
-
----
+- `name` (string, required on create)
+- `estimated_duration_minutes` (int >= 1)
+- `priority` (int >= 0)
+- `earliest_start` (ISO datetime, optional)
+- `deadline` (ISO datetime, optional)
+- `preferred_time_of_day` (`anytime|morning|afternoon|evening`)
+- `splittable` (boolean)
 
 ## Availability
 
-### List availability windows
-```
-GET /api/availability
-```
-Returns all availability windows, ordered by day and start time.
+- `GET /api/availability`
+- `POST /api/availability`
+- `GET /api/availability/{window_id}`
+- `PUT /api/availability/{window_id}`
+- `DELETE /api/availability/{window_id}`
 
----
+Fields:
 
-### Create availability window
-```
-POST /api/availability
-Content-Type: application/json
-```
-
-**Body:**
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| day_of_week | integer | Yes | 0 = Monday, 6 = Sunday |
-| start_minutes | integer | Yes | Minutes from midnight (0–1440). E.g., 540 = 9:00 AM. |
-| end_minutes | integer | Yes | Minutes from midnight. Must be greater than start_minutes. |
-
-**Example:**
-```json
-{
-  "day_of_week": 0,
-  "start_minutes": 540,
-  "end_minutes": 1020
-}
-```
-(Monday 9:00 AM – 5:00 PM)
-
----
-
-### Get availability window
-```
-GET /api/availability/{window_id}
-```
-
----
-
-### Update availability window
-```
-PUT /api/availability/{window_id}
-Content-Type: application/json
-```
-Partial updates supported. start_minutes must remain less than end_minutes.
-
----
-
-### Delete availability window
-```
-DELETE /api/availability/{window_id}
-```
-**Response:** 204 No Content.
-
----
+- `day_of_week` (`0..6`, Monday = 0)
+- `start_minutes` (`0..1439`)
+- `end_minutes` (`1..1440`, must be greater than `start_minutes`)
 
 ## Constraints
 
-### List constraints
-```
-GET /api/constraints
-```
+- `GET /api/constraints`
+- `POST /api/constraints`
+- `GET /api/constraints/{constraint_id}`
+- `PUT /api/constraints/{constraint_id}`
+- `DELETE /api/constraints/{constraint_id}`
 
----
+Constraint types:
 
-### Create constraint
-```
-POST /api/constraints
-Content-Type: application/json
-```
-
-**Body:** Depends on `constraint_type`.
-
-#### Protected block (e.g., lunch)
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| constraint_type | string | Yes | "protected_block" |
-| day_of_week | integer | Yes | 0–6 |
-| start_minutes | integer | Yes | 0–1440 |
-| end_minutes | integer | Yes | Must be > start_minutes |
-
-**Example:**
-```json
-{
-  "constraint_type": "protected_block",
-  "day_of_week": 0,
-  "start_minutes": 720,
-  "end_minutes": 780
-}
-```
-(Monday 12:00–13:00 lunch block)
-
-#### Max continuous work
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| constraint_type | string | Yes | "max_continuous_work" |
-| value | integer | Yes | Max minutes per block (min 1) |
-
-**Example:**
-```json
-{
-  "constraint_type": "max_continuous_work",
-  "value": 60
-}
-```
-
----
-
-### Get constraint
-```
-GET /api/constraints/{constraint_id}
-```
-
----
-
-### Update constraint
-```
-PUT /api/constraints/{constraint_id}
-Content-Type: application/json
-```
-Partial updates supported.
-
----
-
-### Delete constraint
-```
-DELETE /api/constraints/{constraint_id}
-```
-**Response:** 204 No Content.
-
----
+- `protected_block` with `day_of_week`, `start_minutes`, `end_minutes`
+- `max_continuous_work` with `value` (minutes)
 
 ## Schedule
 
-### List persisted schedule blocks
-```
-GET /api/schedule?start_date=...&end_date=...
-```
+- `GET /api/schedule?start_date=...&end_date=...`  
+  Returns persisted blocks in range.
 
-Returns scheduled blocks that overlap the given time range (without running the scheduler). `start_date` and `end_date` are ISO datetimes (query parameters).
+- `POST /api/schedule`  
+  Generates schedule for range and replaces overlapping persisted blocks.
 
----
+- `PATCH /api/schedule/blocks/{block_id}`  
+  Moves one block by setting `start_time`; duration is preserved.
 
-### Generate schedule
-```
-POST /api/schedule
-Content-Type: application/json
-```
+- `DELETE /api/schedule/blocks/{block_id}`
 
-**Body:**
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| start_date | ISO datetime string | Yes | Start of date range (e.g., "2025-01-06T00:00:00") |
-| end_date | ISO datetime string | Yes | End of date range |
-| replace_existing | boolean | No | Default true. Reserved for future use. |
+- `POST /api/schedule/export`  
+  Exports persisted blocks in range as `.ics` (`text/calendar`).
 
-**Example:**
+Request body for generate/export:
+
 ```json
 {
-  "start_date": "2025-01-06T00:00:00",
-  "end_date": "2025-01-12T00:00:00"
+  "start_date": "2030-01-07T00:00:00",
+  "end_date": "2030-01-14T00:00:00"
 }
 ```
 
-**Behavior:** Recomputes the schedule for the range, **replaces** any persisted blocks that overlap the same range, and returns the new blocks (with real database ids).
+## Common errors
 
-**Response:** Array of scheduled blocks:
-```json
-[
-  {
-    "id": 1,
-    "task_id": 1,
-    "task_name": "Study",
-    "start_time": "2025-01-06T09:00:00",
-    "end_time": "2025-01-06T10:00:00",
-    "duration_minutes": 60
-  },
-  ...
-]
-```
-
----
-
-### Move a scheduled block
-```
-PATCH /api/schedule/blocks/{block_id}
-Content-Type: application/json
-```
-
-**Body:**
-
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| start_time | ISO datetime | Yes | New start; end time is inferred from the block’s stored duration |
-
-**Response:** Updated block. **422** if the move would overlap another block, fall outside availability, hit a protected block, exceed max continuous work, or violate the task’s earliest start / deadline / time-of-day preference.
-
----
-
-### Delete a scheduled block
-```
-DELETE /api/schedule/blocks/{block_id}
-```
-
-**Response:** 204 No Content.
-
----
-
-### Export schedule as .ics
-```
-POST /api/schedule/export
-Content-Type: application/json
-```
-
-**Body:** Same as generate schedule (`start_date`, `end_date`).
-
-**Response:** Binary .ics file built from **persisted** blocks in that range (does not regenerate).  
-Content-Type: `text/calendar`  
-Content-Disposition: `attachment; filename=chronos_schedule.ics`
-
-Generate or regenerate the schedule first if you need events in the file. You can import the export into Google Calendar, Apple Calendar, Outlook, etc.
-
----
-
-## Error Responses
-
-- **404 Not Found** — Resource (task, availability, constraint) does not exist.
-- **422 Unprocessable Entity** — Validation error (e.g., invalid fields, constraint validation).
-- **500 Internal Server Error** — Server-side error.
-
-Validation errors include a `detail` field describing what went wrong.
+- `404` - resource not found
+- `422` - validation or rule violation
+- `500` - unexpected server error

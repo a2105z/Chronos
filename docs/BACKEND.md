@@ -37,7 +37,15 @@ The backend is a FastAPI service in `backend/app/`. It handles validation, persi
 - Scheduler entry: `services/scheduler/engine.py`
 - Slot creation: `services/scheduler/slots.py`
 - Allocation: `services/scheduler/allocator.py`
+- Interval tracking: `services/scheduler/intervals.py`
+- Candidate scoring and style selection: `services/scheduler/scoring.py`
 - Hard-constraint checks for manual moves: `services/schedule_validation.py`
+
+Allocation notes:
+
+- The scheduler uses scored greedy placement (not simple first-fit).
+- Workload-aware styles tune scoring (`balanced`, `deadline_focus`, `deep_work`).
+- Overlap checks use a sorted interval timeline for cleaner and faster placement checks.
 
 ## Export
 

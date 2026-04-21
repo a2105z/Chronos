@@ -13,7 +13,7 @@ Everything project-related lives in this folder so it is easy to navigate in one
 - `ARCHITECTURE.md` - high-level system layout and data flow
 - `BACKEND.md` - FastAPI app structure, routes, and services
 - `FRONTEND.md` - React app structure, views, and API usage
-- `SCHEDULING_ENGINE.md` - how tasks are ordered and allocated
+- `SCHEDULING_ENGINE.md` - how scored greedy scheduling picks blocks
 - `API.md` - endpoint reference with request/response examples
 - `CROSS_PLATFORM_TESTING.md` - `.ics` import checks for Apple/Outlook/Google
 - `TESTING.md` - backend, frontend, and manual test checklist

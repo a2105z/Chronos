@@ -7,6 +7,13 @@ from typing import Optional
 from app.models.constraint import Constraint
 from app.models.task import Task
 from app.services.scheduler.constraints import getMaxContinuousWorkMinutes
+from app.services.scheduler.intervals import BusyTimeline
+from app.services.scheduler.scoring import (
+    choose_allocation_style,
+    score_fixed_candidate,
+    score_splittable_candidate,
+    weights_for_style,
+)
 
 
 @dataclass
@@ -94,10 +101,13 @@ def orderTasks(tasks: list[Task]) -> list[Task]:
 
 
 def allocateTasks(tasks: list[Task], slots: list[tuple[datetime, datetime]], constraints: Optional[list[Constraint]] = None) -> list[AllocatedBlock]:
-    """Greedily allocate tasks to slots. No overlaps. Respects splittable flag and max_continuous_work."""
+    """Allocate tasks with scored greedy selection under hard constraints."""
     ordered = orderTasks(tasks)
-    usedRanges: list[tuple[datetime, datetime]] = []
+    timeline = BusyTimeline()
     blocks: list[AllocatedBlock] = []
+    lastEndByTask: dict[int, datetime] = {}
+    style = choose_allocation_style(ordered)
+    weights = weights_for_style(style)
     maxContinuousWork: Optional[int] = None
     if constraints:
         maxContinuousWork = getMaxContinuousWorkMinutes(constraints)
@@ -109,87 +119,183 @@ def allocateTasks(tasks: list[Task], slots: list[tuple[datetime, datetime]], con
 
         mustSplit = maxContinuousWork is not None and remaining > maxContinuousWork
         if task.splittable or mustSplit:
-            allocateSplittable(task, remaining, slots, usedRanges, blocks, maxContinuousWork)
+            allocateSplittable(
+                task,
+                remaining,
+                slots,
+                timeline,
+                blocks,
+                lastEndByTask,
+                weights,
+                maxContinuousWork,
+            )
         else:
-            allocateFixed(task, remaining, slots, usedRanges, blocks, maxContinuousWork)
+            allocateFixed(
+                task,
+                remaining,
+                slots,
+                timeline,
+                blocks,
+                lastEndByTask,
+                weights,
+                maxContinuousWork,
+            )
 
     return blocks
 
 
 
-def allocateSplittable(task: Task, remaining: int, slots: list[tuple[datetime, datetime]], usedRanges: list[tuple[datetime, datetime]], blocks: list[AllocatedBlock], maxContinuousWork: Optional[int] = None) -> None:
-    """Allocate a splittable task across one or more slot runs."""
-    for (slotStart, slotEnd) in slots:
-        if remaining <= 0:
+def allocateSplittable(
+    task: Task,
+    remaining: int,
+    slots: list[tuple[datetime, datetime]],
+    timeline: BusyTimeline,
+    blocks: list[AllocatedBlock],
+    lastEndByTask: dict[int, datetime],
+    weights,
+    maxContinuousWork: Optional[int] = None,
+) -> None:
+    """Allocate a splittable task by repeatedly choosing the best-scored chunk."""
+    while remaining > 0:
+        bestChoice: tuple[float, datetime, datetime, int] | None = None
+        previousEnd = lastEndByTask.get(task.id)
+
+        for (slotStart, slotEnd) in slots:
+            if not isSlotAllowedForTask(task, slotStart, slotEnd):
+                continue
+            if timeline.overlaps(slotStart, slotEnd):
+                continue
+
+            slotMinutes = int((slotEnd - slotStart).total_seconds() / 60)
+            allocMinutes = min(remaining, slotMinutes)
+            if maxContinuousWork is not None and allocMinutes > maxContinuousWork:
+                allocMinutes = maxContinuousWork
+            if allocMinutes <= 0:
+                continue
+
+            blockEnd = slotStart + timedelta(minutes=allocMinutes)
+            score = score_splittable_candidate(
+                task=task,
+                slot_start=slotStart,
+                slot_end=blockEnd,
+                allocated_minutes=allocMinutes,
+                remaining_before_pick=remaining,
+                previous_end_for_task=previousEnd,
+                weights=weights,
+            )
+
+            if bestChoice is None:
+                bestChoice = (score, slotStart, blockEnd, allocMinutes)
+                continue
+
+            currentScore, currentStart, _, _ = bestChoice
+            if score > currentScore or (score == currentScore and slotStart < currentStart):
+                bestChoice = (score, slotStart, blockEnd, allocMinutes)
+
+        if bestChoice is None:
             break
-        if not isSlotAllowedForTask(task, slotStart, slotEnd):
-            continue
-        if slotOverlapsAny(slotStart, slotEnd, usedRanges):
-            continue
 
-        slotMins = int((slotEnd - slotStart).total_seconds() / 60)
-        allocMins = min(remaining, slotMins)
-        if maxContinuousWork is not None and allocMins > maxContinuousWork:
-            allocMins = maxContinuousWork
-        if allocMins <= 0:
-            continue
-
-        blockEnd = slotStart + timedelta(minutes=allocMins)
+        _, bestStart, bestEnd, bestMinutes = bestChoice
         newBlock = AllocatedBlock(
             task_id=task.id,
             task_name=task.name,
-            start_time=slotStart,
-            end_time=blockEnd,
-            duration_minutes=allocMins,
+            start_time=bestStart,
+            end_time=bestEnd,
+            duration_minutes=bestMinutes,
         )
         blocks.append(newBlock)
-        usedRanges.append((slotStart, blockEnd))
-        remaining -= allocMins
+        timeline.add(bestStart, bestEnd)
+        lastEndByTask[task.id] = bestEnd
+        remaining -= bestMinutes
 
 
 
-def allocateFixed(task: Task, remaining: int, slots: list[tuple[datetime, datetime]], usedRanges: list[tuple[datetime, datetime]], blocks: list[AllocatedBlock], maxContinuousWork: Optional[int] = None) -> None:
-    """Allocate a non-splittable task in one contiguous block."""
-    runStart = None
-    runEnd = None
-    runMins = 0
+def _findFixedCandidates(
+    task: Task,
+    requiredMinutes: int,
+    slots: list[tuple[datetime, datetime]],
+    timeline: BusyTimeline,
+) -> list[tuple[datetime, datetime]]:
+    """Return all contiguous candidate ranges that can hold requiredMinutes."""
+    candidates: list[tuple[datetime, datetime]] = []
 
-    for (slotStart, slotEnd) in slots:
-        if runMins >= remaining:
-            break
-        if not isSlotAllowedForTask(task, slotStart, slotEnd):
-            runStart = None
-            runEnd = None
-            runMins = 0
+    for startIndex in range(len(slots)):
+        startSlot, firstEnd = slots[startIndex]
+        if not isSlotAllowedForTask(task, startSlot, firstEnd):
             continue
-        if slotOverlapsAny(slotStart, slotEnd, usedRanges):
-            runStart = None
-            runEnd = None
-            runMins = 0
+        if timeline.overlaps(startSlot, firstEnd):
             continue
 
-        slotMins = int((slotEnd - slotStart).total_seconds() / 60)
+        contiguousMinutes = 0
+        expectedNextStart = startSlot
 
-        if runEnd is None or slotStart != runEnd:
-            runStart = slotStart
-            runEnd = slotEnd
-            runMins = slotMins
-        else:
-            runEnd = slotEnd
-            runMins += slotMins
+        for cursor in range(startIndex, len(slots)):
+            slotStart, slotEnd = slots[cursor]
+            if slotStart != expectedNextStart:
+                break
+            if not isSlotAllowedForTask(task, slotStart, slotEnd):
+                break
+            if timeline.overlaps(slotStart, slotEnd):
+                break
 
-        if runMins >= remaining:
-            allocMins = remaining
-            if maxContinuousWork is not None and allocMins > maxContinuousWork:
-                allocMins = maxContinuousWork
-            blockEnd = runStart + timedelta(minutes=allocMins)
-            newBlock = AllocatedBlock(
-                task_id=task.id,
-                task_name=task.name,
-                start_time=runStart,
-                end_time=blockEnd,
-                duration_minutes=allocMins,
-            )
-            blocks.append(newBlock)
-            usedRanges.append((runStart, blockEnd))
-            break
+            slotMinutes = int((slotEnd - slotStart).total_seconds() / 60)
+            contiguousMinutes += slotMinutes
+            expectedNextStart = slotEnd
+
+            if contiguousMinutes >= requiredMinutes:
+                blockEnd = startSlot + timedelta(minutes=requiredMinutes)
+                candidates.append((startSlot, blockEnd))
+                break
+
+    return candidates
+
+
+def allocateFixed(
+    task: Task,
+    remaining: int,
+    slots: list[tuple[datetime, datetime]],
+    timeline: BusyTimeline,
+    blocks: list[AllocatedBlock],
+    lastEndByTask: dict[int, datetime],
+    weights,
+    maxContinuousWork: Optional[int] = None,
+) -> None:
+    """Allocate a non-splittable task by choosing the best contiguous candidate."""
+    allocMinutes = remaining
+    if maxContinuousWork is not None and allocMinutes > maxContinuousWork:
+        allocMinutes = maxContinuousWork
+    if allocMinutes <= 0:
+        return
+
+    candidates = _findFixedCandidates(task, allocMinutes, slots, timeline)
+    if not candidates:
+        return
+
+    bestRange: tuple[datetime, datetime] | None = None
+    bestScore: float | None = None
+    for candidateStart, candidateEnd in candidates:
+        score = score_fixed_candidate(task, candidateStart, candidateEnd, weights=weights)
+        if bestScore is None:
+            bestScore = score
+            bestRange = (candidateStart, candidateEnd)
+            continue
+        assert bestRange is not None
+        currentStart, _ = bestRange
+        if score > bestScore or (score == bestScore and candidateStart < currentStart):
+            bestScore = score
+            bestRange = (candidateStart, candidateEnd)
+
+    if bestRange is None:
+        return
+
+    chosenStart, chosenEnd = bestRange
+    newBlock = AllocatedBlock(
+        task_id=task.id,
+        task_name=task.name,
+        start_time=chosenStart,
+        end_time=chosenEnd,
+        duration_minutes=allocMinutes,
+    )
+    blocks.append(newBlock)
+    timeline.add(chosenStart, chosenEnd)
+    lastEndByTask[task.id] = chosenEnd

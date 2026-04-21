@@ -26,7 +26,7 @@ Chronos has three parts:
 - `backend/app/api/` - route handlers
 - `backend/app/models/` - SQLModel tables
 - `backend/app/schemas/` - request/response contracts
-- `backend/app/services/scheduler/` - slot building + allocation
+- `backend/app/services/scheduler/` - slot building, scored allocation, interval tracking
 - `backend/app/services/export/service.py` - `.ics` generation
 - `frontend/src/components/` - UI views
 - `frontend/src/api/` - API client wrappers

@@ -1,45 +1,59 @@
 # Scheduling Engine
 
-The scheduler converts tasks + availability + constraints into persisted `ScheduledBlock` records.
+This is the core logic that turns tasks into calendar blocks.
 
-## Inputs
+## What goes in
 
-- Tasks (`Task`)
-- Availability windows (`AvailabilityWindow`)
-- Constraints (`Constraint`)
-- Requested date range (`start_date`, `end_date`)
+- tasks
+- availability windows
+- constraints
+- requested date range
 
-## Output
+## What comes out
 
-- A list of non-overlapping scheduled blocks inside the requested range
+- persisted `ScheduledBlock` rows for the range
+- no overlaps
+- no violations of hard constraints
 
-## Pipeline
+## How it works
 
-1. **Load data** in `engine.py`.
-2. **Build 15-minute slots** in `slots.py` from availability windows.
-3. **Remove protected time** while building slots.
-4. **Order tasks** by deadline/priority in `allocator.py`.
-5. **Allocate blocks greedily** without overlaps.
-6. **Apply max continuous work limit** when present.
-7. **Persist blocks** via `schedule_persistence.py`.
+1. `engine.py` loads tasks, availability, and constraints.
+2. `slots.py` builds 15-minute slots from availability.
+3. Protected blocks are filtered out at slot build time.
+4. `allocator.py` orders tasks and picks block placements.
+5. Chosen blocks are saved through `schedule_persistence.py`.
 
-## Behavior rules
+## Allocation strategy (current)
 
-- Blocks never overlap.
-- Blocks stay inside availability.
-- Protected blocks are never used.
-- If a non-splittable task exceeds max continuous work, it is split to satisfy the hard limit.
-- Task time constraints (`earliest_start`, `deadline`, `preferred_time_of_day`) are respected.
+The allocator is still greedy, but no longer first-fit.
 
-## Why this design
+- It now scores candidates and picks the best one.
+- It uses a sorted interval timeline for overlap checks.
+- It can switch style based on workload:
+  - `balanced`
+  - `deadline_focus`
+  - `deep_work`
 
-- Fast and deterministic for local planning.
-- Easy to reason about and test.
-- Strong hard-constraint guarantees.
+Scoring considers:
 
-## Where to look in code
+- deadline slack / lateness
+- task priority
+- time-of-day preference match
+- continuity (reduce fragmentation)
+- chunk usefulness for remaining work
+
+## Hard rules always enforced
+
+- no block overlap
+- inside availability windows
+- protected blocks excluded
+- max continuous work respected
+- task constraints respected (`earliest_start`, `deadline`, `preferred_time_of_day`)
+
+## Key files
 
 - `backend/app/services/scheduler/engine.py`
 - `backend/app/services/scheduler/slots.py`
 - `backend/app/services/scheduler/allocator.py`
-- `backend/app/services/scheduler/constraints.py`
+- `backend/app/services/scheduler/intervals.py`
+- `backend/app/services/scheduler/scoring.py`

@@ -1,7 +1,7 @@
 .task-edit-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(8, 26, 51, 0.55);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -10,11 +10,12 @@
 }
 
 .task-edit-dialog {
-  background: #fff;
-  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
   max-width: 440px;
   width: 100%;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-md);
 }
 
 .task-edit-header {
@@ -22,7 +23,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #e5ecfb;
 }
 
 .task-edit-header h3 {
@@ -36,7 +37,7 @@
   font-size: 1.5rem;
   line-height: 1;
   cursor: pointer;
-  color: #555;
+  color: var(--text-muted);
 }
 
 .task-edit-form {
@@ -58,8 +59,10 @@
 .task-edit-form input[type="date"],
 .task-edit-form select {
   padding: 0.45rem 0.5rem;
-  border-radius: 6px;
-  border: 1px solid #ccc;
+  border-radius: 8px;
+  border: 1px solid #c5d4f2;
+  background: #fff;
+  color: var(--text-primary);
 }
 
 .task-edit-actions {
@@ -69,14 +72,6 @@
   margin-top: 0.5rem;
 }
 
-.btn-secondary {
-  padding: 0.45rem 0.9rem;
-  border-radius: 6px;
-  border: 1px solid #888;
-  background: #fff;
-  cursor: pointer;
-}
-
-.btn-secondary:hover {
-  background: #f3f3f3;
+.task-edit-dialog .btn-secondary {
+  min-width: 84px;
 }

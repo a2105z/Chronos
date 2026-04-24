@@ -3,16 +3,36 @@
 }
 
 :root {
-  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-  color: #1a1a2e;
-  background-color: #f8f9fa;
+  color: #102542;
+  background-color: #f3f7fc;
+
+  --navy-950: #081a33;
+  --navy-900: #0d2245;
+  --navy-800: #14305c;
+  --navy-700: #1d3f78;
+  --navy-100: #dce9ff;
+  --navy-050: #eef4ff;
+
+  --text-primary: #102542;
+  --text-muted: #5a6b86;
+
+  --surface: #ffffff;
+  --surface-soft: #f6f9ff;
+  --border: #d7e3f8;
+  --shadow-sm: 0 8px 22px rgba(8, 26, 51, 0.08);
+  --shadow-md: 0 16px 34px rgba(8, 26, 51, 0.14);
+  --radius-md: 12px;
+  --radius-lg: 16px;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
+  color: var(--text-primary);
+  background: radial-gradient(circle at top, #f9fbff 0%, #eef3ff 55%, #e8eefb 100%);
 }
 
 #root {

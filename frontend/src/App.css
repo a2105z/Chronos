@@ -5,53 +5,110 @@
 }
 
 .app-header {
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  background: linear-gradient(140deg, var(--navy-950) 0%, var(--navy-900) 56%, #133261 100%);
   color: white;
-  padding: 1.5rem 2rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-md);
+}
+
+.app-header-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1.4rem 1.6rem 1.2rem;
 }
 
 .app-header h1 {
   margin: 0;
-  font-size: 1.75rem;
-  font-weight: 600;
+  letter-spacing: 0.2px;
+  font-size: 1.72rem;
+  font-weight: 650;
 }
 
 .tagline {
-  margin: 0.25rem 0 1rem;
-  opacity: 0.9;
-  font-size: 0.95rem;
+  margin: 0.22rem 0 0.95rem;
+  opacity: 0.92;
+  font-size: 0.92rem;
+  color: #cfe1ff;
 }
 
 .nav-tabs {
   display: flex;
   gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .nav-tabs button {
-  padding: 0.5rem 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  background: transparent;
-  color: white;
-  border-radius: 6px;
+  padding: 0.5rem 0.95rem;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.03);
+  color: #f8fbff;
+  border-radius: 10px;
   cursor: pointer;
-  font-size: 0.9rem;
-  transition: background 0.2s;
+  font-size: 0.88rem;
+  font-weight: 550;
+  transition: background 0.2s, transform 0.15s, border-color 0.2s;
 }
 
 .nav-tabs button:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-1px);
 }
 
 .nav-tabs button.active {
   background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.5);
+  border-color: rgba(255, 255, 255, 0.62);
+  color: #fff;
 }
 
 .app-main {
   flex: 1;
-  padding: 1.5rem 2rem;
-  max-width: 1200px;
+  padding: 1.35rem 1.25rem 2rem;
+  max-width: 1100px;
   width: 100%;
   margin: 0 auto;
+}
+
+.btn-primary {
+  padding: 0.52rem 0.9rem;
+  background: linear-gradient(180deg, var(--navy-800) 0%, var(--navy-900) 100%);
+  color: #fff;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  cursor: pointer;
+  font-size: 0.87rem;
+  font-weight: 560;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(180deg, var(--navy-700) 0%, var(--navy-800) 100%);
+}
+
+.btn-secondary {
+  padding: 0.46rem 0.8rem;
+  border-radius: 9px;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 0.84rem;
+  font-weight: 550;
+}
+
+.btn-secondary:hover {
+  background: var(--surface-soft);
+}
+
+.btn-danger {
+  padding: 0.34rem 0.64rem;
+  background: #cf3e4f;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 560;
+}
+
+.btn-danger:hover {
+  background: #b93546;
 }

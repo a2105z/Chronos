@@ -1,5 +1,3 @@
-/** App title, tagline, and primary navigation. */
-
 import type { AppView } from "../../types/app";
 import { AppNav } from "./AppNav";
 

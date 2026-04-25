@@ -8,7 +8,7 @@ from app.schemas.constraint import (
     ConstraintCreate,
     ConstraintRead,
     ConstraintUpdate,
-    validateConstraintFields,
+    validateConstraintFields
 )
 
 
@@ -23,7 +23,7 @@ def validateConstraint(constraint: Constraint) -> None:
             constraint.day_of_week,
             constraint.start_minutes,
             constraint.end_minutes,
-            constraint.value,
+            constraint.value
         )
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e)) from e

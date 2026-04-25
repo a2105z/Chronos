@@ -1,5 +1,3 @@
-/** Task list screen: load tasks, create new ones, delete existing. */
-
 import { useState, useEffect } from "react";
 import type { ReactNode } from "react";
 import { getTasks, createTask, deleteTask } from "../../api/client";
@@ -16,7 +14,7 @@ interface TaskListProps {
 }
 
 function parseMinutesFromInput(raw: string, fallback: number): number {
-  const parsed = parseInt(raw, 10);
+  let parsed = parseInt(raw, 10);
   if (isNaN(parsed)) {
     return fallback;
   }
@@ -24,7 +22,7 @@ function parseMinutesFromInput(raw: string, fallback: number): number {
 }
 
 function parseNonNegativeHours(raw: string): number {
-  const parsed = parseInt(raw, 10);
+  let parsed = parseInt(raw, 10);
   if (isNaN(parsed)) {
     return 0;
   }
@@ -35,7 +33,7 @@ function parseNonNegativeHours(raw: string): number {
 }
 
 function clampMinutesPart(raw: string): number {
-  const parsed = parseInt(raw, 10);
+  let parsed = parseInt(raw, 10);
   if (isNaN(parsed)) {
     return 0;
   }
@@ -61,7 +59,7 @@ export default function TaskList({ onTaskCreated }: TaskListProps) {
 
   async function loadTasks() {
     try {
-      const response = await getTasks();
+      let response = await getTasks();
       setTasks(response.data);
     } catch {
       setTasks([]);
@@ -93,14 +91,14 @@ export default function TaskList({ onTaskCreated }: TaskListProps) {
       return;
     }
 
-    const earliestStart = toIsoDateFromInput(finishWindowStart);
-    const deadline = toIsoDateFromInput(finishWindowEnd);
+    let earliestStart = toIsoDateFromInput(finishWindowStart);
+    let deadline = toIsoDateFromInput(finishWindowEnd);
 
     try {
       await createTask({
         ...formData,
         earliest_start: earliestStart,
-        deadline,
+        deadline
       });
       setFormData({ ...DEFAULT_TASK_FORM });
       setFinishWindowStart("");
@@ -150,37 +148,37 @@ export default function TaskList({ onTaskCreated }: TaskListProps) {
   }
 
   function handleDurationTotalChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const mins = parseMinutesFromInput(event.target.value, 30);
+    let mins = parseMinutesFromInput(event.target.value, 30);
     setFormData({
       ...formData,
-      estimated_duration_minutes: mins,
+      estimated_duration_minutes: mins
     });
     setDurationHours(Math.floor(mins / 60));
     setDurationMinutesPart(mins % 60);
   }
 
   function updateDurationFromParts(hours: number, minutesPart: number) {
-    const totalMinutes = Math.max(1, hours * 60 + minutesPart);
+    let totalMinutes = Math.max(1, hours * 60 + minutesPart);
     setFormData({
       ...formData,
-      estimated_duration_minutes: totalMinutes,
+      estimated_duration_minutes: totalMinutes
     });
   }
 
   function handleDurationHoursChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const nextHours = parseNonNegativeHours(event.target.value);
+    let nextHours = parseNonNegativeHours(event.target.value);
     setDurationHours(nextHours);
     updateDurationFromParts(nextHours, durationMinutesPart);
   }
 
   function handleDurationMinutesPartChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const nextMinutes = clampMinutesPart(event.target.value);
+    let nextMinutes = clampMinutesPart(event.target.value);
     setDurationMinutesPart(nextMinutes);
     updateDurationFromParts(durationHours, nextMinutes);
   }
 
   function handlePreferredTimeChange(event: React.ChangeEvent<HTMLSelectElement>) {
-    const value = event.target.value as TaskCreate["preferred_time_of_day"];
+    let value = event.target.value as TaskCreate["preferred_time_of_day"];
     setFormData({ ...formData, preferred_time_of_day: value });
   }
 
@@ -205,7 +203,7 @@ export default function TaskList({ onTaskCreated }: TaskListProps) {
     return <div className="task-list">Loading tasks...</div>;
   }
 
-  const taskItems: ReactNode[] = [];
+  let taskItems: ReactNode[] = [];
   if (tasks.length === 0 && !showForm) {
     taskItems.push(
       <li key="empty" className="task-empty">
@@ -214,7 +212,7 @@ export default function TaskList({ onTaskCreated }: TaskListProps) {
     );
   } else {
     for (let i = 0; i < tasks.length; i++) {
-      const task = tasks[i];
+      let task = tasks[i];
       taskItems.push(
         <TaskRow key={task.id} task={task} onDelete={handleDelete} onEdit={handleEditTask} />
       );

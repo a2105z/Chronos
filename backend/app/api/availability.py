@@ -4,11 +4,7 @@ from sqlmodel import Session, select
 from app.db import getSession
 from app.utils import applyPartialUpdate
 from app.models.availability import AvailabilityWindow
-from app.schemas.availability import (
-    AvailabilityCreate,
-    AvailabilityRead,
-    AvailabilityUpdate,
-)
+from app.schemas.availability import AvailabilityCreate, AvailabilityRead, AvailabilityUpdate
 
 
 router = APIRouter(prefix="/api/availability", tags=["availability"])
@@ -55,10 +51,7 @@ def updateAvailability(window_id: int, availIn: AvailabilityUpdate, session: Ses
     applyPartialUpdate(window, availIn.model_dump(exclude_unset=True))
 
     if window.start_minutes >= window.end_minutes:
-        raise HTTPException(
-            status_code=422,
-            detail="start_minutes must be less than end_minutes",
-        )
+        raise HTTPException(status_code=422, detail="start_minutes must be less than end_minutes")
 
     session.add(window)
     session.commit()

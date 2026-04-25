@@ -1,5 +1,3 @@
-"""Constraint request/response schemas and validation."""
-
 from enum import Enum
 from typing import Optional
 

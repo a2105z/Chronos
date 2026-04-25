@@ -1,5 +1,3 @@
-"""Validate manual schedule block placements against hard constraints."""
-
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -18,7 +16,7 @@ from app.services.scheduler.constraints import (
     validateMaxContinuousWork,
     validateNoOverlap,
     validateNoProtectedOverlap,
-    validateWithinAvailability,
+    validateWithinAvailability
 )
 
 if TYPE_CHECKING:
@@ -42,7 +40,7 @@ def _protectedAsDicts(constraints: list[Constraint]) -> list[dict]:
                 "constraint_type": "protected_block",
                 "day_of_week": c.day_of_week,
                 "start_minutes": c.start_minutes,
-                "end_minutes": c.end_minutes,
+                "end_minutes": c.end_minutes
             }
         )
     return out
@@ -53,7 +51,7 @@ def validateMovedBlock(
     blockId: int,
     newStart: datetime,
     newEnd: datetime,
-    fallbackWindows: list[AvailabilityWindow],
+    fallbackWindows: list[AvailabilityWindow]
 ) -> None:
     """Raise ValueError with a human-readable reason if the move is invalid."""
     block = session.get(ScheduledBlock, blockId)
@@ -88,14 +86,14 @@ def validateMovedBlock(
             {
                 "start_time": o.start_time,
                 "end_time": o.end_time,
-                "duration_minutes": o.duration_minutes,
+                "duration_minutes": o.duration_minutes
             }
         )
     blockDicts.append(
         {
             "start_time": newStart,
             "end_time": newEnd,
-            "duration_minutes": durationMins,
+            "duration_minutes": durationMins
         }
     )
 

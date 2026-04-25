@@ -1,5 +1,3 @@
-/** Task CRUD endpoints. */
-
 import { api } from "./instance";
 import type { TaskCreate, TaskUpdate } from "../types/task";
 

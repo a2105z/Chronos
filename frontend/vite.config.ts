@@ -1,5 +1,3 @@
-/** Vite config - dev server, proxy, tests. */
-
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
@@ -12,13 +10,13 @@ export default defineConfig({
     proxy: {
       "/api": {
         target: "http://localhost:8000",
-        changeOrigin: true,
-      },
-    },
+        changeOrigin: true
+      }
+    }
   },
   test: {
     environment: "jsdom",
     setupFiles: ["./tests/setup.ts"],
-    include: ["tests/**/*.{test,spec}.{ts,tsx}"],
-  },
+    include: ["tests/**/*.{test,spec}.{ts,tsx}"]
+  }
 });

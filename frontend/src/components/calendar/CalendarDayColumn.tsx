@@ -1,5 +1,3 @@
-/** One day cell in the weekly schedule grid. */
-
 import type { ReactElement } from "react";
 import type { Task } from "../../types/task";
 import type { ScheduledBlock } from "../../types/schedule";
@@ -20,34 +18,34 @@ export function CalendarDayColumn({
   dayBlocks,
   unscheduledTasks,
   onMoveBlock,
-  onDeleteBlock,
+  onDeleteBlock
 }: CalendarDayColumnProps) {
   let sectionClassName = "calendar-day";
   if (isPastDay) {
     sectionClassName = "calendar-day calendar-day-past";
   }
 
-  const weekdayLabel = day.toLocaleDateString([], { weekday: "short" });
-  const dateLabel = day.toLocaleDateString();
+  let weekdayLabel = day.toLocaleDateString([], { weekday: "short" });
+  let dateLabel = day.toLocaleDateString();
 
-  const hasBlocks = dayBlocks.length > 0;
-  const hasUnscheduled = unscheduledTasks.length > 0;
-  const isEmpty = !hasBlocks && !hasUnscheduled;
+  let hasBlocks = dayBlocks.length > 0;
+  let hasUnscheduled = unscheduledTasks.length > 0;
+  let isEmpty = !hasBlocks && !hasUnscheduled;
 
   let emptyMessage = null;
   if (isEmpty) {
     emptyMessage = <p className="calendar-day-empty">No blocks</p>;
   }
 
-  const canEditBlocks = !isPastDay && onMoveBlock !== undefined && onDeleteBlock !== undefined;
+  let canEditBlocks = !isPastDay && onMoveBlock !== undefined && onDeleteBlock !== undefined;
 
   let blockList = null;
   if (hasBlocks) {
-    const items: ReactElement[] = [];
+    let items: ReactElement[] = [];
     for (let i = 0; i < dayBlocks.length; i++) {
-      const block = dayBlocks[i];
-      const startLabel = formatTimeFromIso(block.start_time);
-      const endLabel = formatTimeFromIso(block.end_time);
+      let block = dayBlocks[i];
+      let startLabel = formatTimeFromIso(block.start_time);
+      let endLabel = formatTimeFromIso(block.end_time);
       let actions: ReactElement | null = null;
       if (canEditBlocks) {
         actions = (
@@ -79,9 +77,9 @@ export function CalendarDayColumn({
 
   let unscheduledList = null;
   if (hasUnscheduled) {
-    const items: ReactElement[] = [];
+    let items: ReactElement[] = [];
     for (let i = 0; i < unscheduledTasks.length; i++) {
-      const task = unscheduledTasks[i];
+      let task = unscheduledTasks[i];
       items.push(
         <li key={task.id} className="unscheduled-task-item">
           <strong>{task.name}</strong>

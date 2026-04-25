@@ -1,5 +1,3 @@
-"""Interval utilities for fast overlap checks during allocation."""
-
 from __future__ import annotations
 
 from bisect import bisect_left

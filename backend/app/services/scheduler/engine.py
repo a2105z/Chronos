@@ -1,5 +1,3 @@
-"""Scheduling engine - generates conflict-free time blocks."""
-
 from datetime import datetime
 from typing import TYPE_CHECKING
 
@@ -61,13 +59,7 @@ class SchedulingEngine:
         """Fallback to full-day weekly availability when none is configured."""
         windows: list[AvailabilityWindow] = []
         for day in range(7):
-            windows.append(
-                AvailabilityWindow(
-                    day_of_week=day,
-                    start_minutes=0,
-                    end_minutes=1440,
-                )
-            )
+            windows.append(AvailabilityWindow(day_of_week=day, start_minutes=0, end_minutes=1440))
         return windows
 
 

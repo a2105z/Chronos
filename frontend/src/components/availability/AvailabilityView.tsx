@@ -1,10 +1,9 @@
-/** CRUD for weekly availability windows (matches backend day_of_week 0=Monday). */
-
 import { useEffect, useState } from "react";
+import type { ReactElement } from "react";
 import {
   getAvailability,
   createAvailability,
-  deleteAvailability,
+  deleteAvailability
 } from "../../api/client";
 import type { Availability } from "../../types/availability";
 import { minutesToTimeInput, timeInputToMinutes, WEEKDAY_LABELS } from "../../utils/timeMinutes";
@@ -22,7 +21,7 @@ export default function AvailabilityView() {
     setLoading(true);
     setError(null);
     try {
-      const res = await getAvailability();
+      let res = await getAvailability();
       setRows(res.data);
     } catch {
       setError("Could not load availability.");
@@ -38,8 +37,8 @@ export default function AvailabilityView() {
 
   async function handleAdd(event: React.FormEvent) {
     event.preventDefault();
-    const startMinutes = timeInputToMinutes(startTime);
-    const endMinutes = timeInputToMinutes(endTime);
+    let startMinutes = timeInputToMinutes(startTime);
+    let endMinutes = timeInputToMinutes(endTime);
     if (endMinutes <= startMinutes) {
       setError("End time must be after start time.");
       return;
@@ -49,7 +48,7 @@ export default function AvailabilityView() {
       await createAvailability({
         day_of_week: dayOfWeek,
         start_minutes: startMinutes,
-        end_minutes: endMinutes,
+        end_minutes: endMinutes
       });
       await load();
     } catch {
@@ -70,6 +69,45 @@ export default function AvailabilityView() {
     return <div className="panel-view">Loading availability…</div>;
   }
 
+  let errorBanner: ReactElement | null = null;
+  if (error !== null) {
+    errorBanner = <p className="form-error-banner">{error}</p>;
+  }
+
+  let emptyRow: ReactElement | null = null;
+  if (rows.length === 0) {
+    emptyRow = <li className="muted">No windows yet. Add at least one, or the scheduler uses a full-week fallback.</li>;
+  }
+
+  let weekdayOptions: ReactElement[] = [];
+  for (let idx = 0; idx < WEEKDAY_LABELS.length; idx++) {
+    let label = WEEKDAY_LABELS[idx];
+    weekdayOptions.push(
+      <option key={label} value={idx}>
+        {label}
+      </option>
+    );
+  }
+
+  let availabilityRows: ReactElement[] = [];
+  for (let i = 0; i < rows.length; i++) {
+    let windowRow = rows[i];
+    availabilityRows.push(
+      <li key={windowRow.id} className="availability-row">
+        <div>
+          <strong>{WEEKDAY_LABELS[windowRow.day_of_week] ?? `Day ${windowRow.day_of_week}`}</strong>
+          <span className="muted">
+            {" "}
+            {minutesToTimeInput(windowRow.start_minutes)} – {minutesToTimeInput(windowRow.end_minutes)}
+          </span>
+        </div>
+        <button type="button" className="btn-danger btn-compact" onClick={() => handleDelete(windowRow.id)}>
+          Remove
+        </button>
+      </li>
+    );
+  }
+
   return (
     <div className="panel-view availability-view">
       <div className="panel-header">
@@ -79,17 +117,13 @@ export default function AvailabilityView() {
         </p>
       </div>
 
-      {error !== null ? <p className="form-error-banner">{error}</p> : null}
+      {errorBanner}
 
       <form className="stacked-form" onSubmit={handleAdd}>
         <label>
           Day
           <select value={dayOfWeek} onChange={(e) => setDayOfWeek(parseInt(e.target.value, 10))}>
-            {WEEKDAY_LABELS.map((label, idx) => (
-              <option key={label} value={idx}>
-                {label}
-              </option>
-            ))}
+            {weekdayOptions}
           </select>
         </label>
         <div className="inline-time-row">
@@ -108,23 +142,8 @@ export default function AvailabilityView() {
       </form>
 
       <ul className="availability-list">
-        {rows.length === 0 ? (
-          <li className="muted">No windows yet. Add at least one, or the scheduler uses a full-week fallback.</li>
-        ) : null}
-        {rows.map((w) => (
-          <li key={w.id} className="availability-row">
-            <div>
-              <strong>{WEEKDAY_LABELS[w.day_of_week] ?? `Day ${w.day_of_week}`}</strong>
-              <span className="muted">
-                {" "}
-                {minutesToTimeInput(w.start_minutes)} – {minutesToTimeInput(w.end_minutes)}
-              </span>
-            </div>
-            <button type="button" className="btn-danger btn-compact" onClick={() => handleDelete(w.id)}>
-              Remove
-            </button>
-          </li>
-        ))}
+        {emptyRow}
+        {availabilityRows}
       </ul>
     </div>
   );

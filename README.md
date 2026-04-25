@@ -1,116 +1,61 @@
 # Chronos
 
-**Intelligent Constraint-Aware Time Blocking Engine**
+Intelligent constraint-aware time blocking engine.
 
-_by Aarav Mittal, Josh Olmos, Anjay Krishna, and Ojas Bankhele_
+Built by Aarav Mittal, Josh Olmos, Anjay Krishna, and Ojas Bankhele.
 
----
+## What Chronos Does
 
-## Overview
+Chronos takes tasks, availability windows, and scheduling constraints, then builds a conflict-free calendar plan.
 
-Chronos is a constraint-aware scheduling engine that converts a structured task list and user availability into a feasible, conflict-free, time-blocked calendar. It bridges the gap between manual planning (to-do lists) and fixed schedules by automatically placing work into open time while respecting user rules and preferences.
+- Generates schedules with no overlap.
+- Stays inside configured availability windows.
+- Applies hard constraints like protected blocks and max continuous work.
+- Handles task priority, deadlines, and preferred time of day.
+- Supports `.ics` export for calendar apps.
 
-### Core Objectives
-
-- **Generate valid schedules** — No overlaps, always within availability windows
-- **Respect constraints** — Hard constraints strictly, soft preferences when possible
-- **Support realistic planning** — Task splitting, breaks, priority/deadline ordering
-- **Provide interactive UI** — View, move, delete, and regenerate blocks
-- **Export to calendar apps** — .ics files for Google Calendar, Apple Calendar, Outlook
-
----
-
-## Documentation
-
-All project docs are in **[docs/](docs/)**. Start with:
-
-- **[Architecture](docs/ARCHITECTURE.md)** — How everything fits together
-- **[Scheduling Engine](docs/SCHEDULING_ENGINE.md)** — How the greedy algorithm works
-- **[API Reference](docs/API.md)** — All endpoints
-- **[Testing Guide](docs/TESTING.md)** — Backend, frontend, and manual validation flow
-- **[Demo Prep](docs/DEMO_PREP.md)** — Demo runbook and readiness checklist
-
-See [docs/README.md](docs/README.md) for the full index and quick links.
-
----
-
-## Tech Stack
-
-| Component | Technology |
-|-----------|------------|
-| Frontend | TypeScript, React, FullCalendar, Axios |
-| Backend | Python 3.11+, FastAPI, Pydantic, SQLModel |
-| Database | SQLite (via SQLModel) |
-| Export | icalendar (RFC 5545 .ics) |
-| Testing | Jest, React Testing Library, Pytest |
-
----
-
-## Project Structure
-
-```
-Chronos/
-├── README.md
-├── backend/
-│   ├── app/
-│   │   ├── __init__.py
-│   │   ├── main.py              # FastAPI application
-│   │   ├── models/               # Database models
-│   │   ├── schemas/              # Pydantic schemas
-│   │   ├── api/                 # API routes
-│   │   ├── services/            # Business logic
-│   │   │   ├── scheduler/        # Scheduling engine
-│   │   │   └── export/          # .ics export service
-│   │   └── db.py                # Database setup
-│   ├── tests/
-│   ├── requirements.txt
-│   └── pyproject.toml
-├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   ├── api/
-│   │   ├── types/
-│   │   └── App.tsx
-│   ├── package.json
-│   └── vite.config.ts
-├── tests/
-│   ├── README.md              # Root test hub and commands
-│   └── manual/
-│       └── demo_checklist.md  # Demo-day manual acceptance checklist
-└── .github/
-    └── workflows/
-        └── ci.yml
-```
-
----
-
-## Getting Started
+## Quick Start (Run the App Locally)
 
 ### Prerequisites
 
-- **Python 3.11+**
-- **Node.js 18+** and npm
-- **Git**
+- Python 3.11+
+- Node.js 18+
+- npm
 
-### Backend Setup
+### 1) Start the backend (Terminal 1)
 
 ```bash
 cd backend
 python -m venv venv
+```
 
-# Windows
+Activate the virtual environment:
+
+- Windows PowerShell:
+
+```bash
 .\venv\Scripts\activate
+```
 
-# macOS/Linux
+- macOS/Linux:
+
+```bash
 source venv/bin/activate
+```
 
+Install dependencies and run FastAPI:
+
+```bash
 pip install -r requirements.txt
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-API docs: **http://localhost:8000/docs**
+Backend URLs:
 
-### Frontend Setup
+- API base: `http://localhost:8000`
+- Swagger docs: `http://localhost:8000/docs`
+
+### 2) Start the frontend (Terminal 2)
 
 ```bash
 cd frontend
@@ -118,64 +63,80 @@ npm install
 npm run dev
 ```
 
-App: **http://localhost:5173**
+Frontend URL:
 
-### Run Tests
+- App: `http://localhost:5173`
 
-**Backend:**
+The frontend calls `/api`, and Vite proxies that to `http://localhost:8000`.
+
+### 3) Stop the app
+
+- In each terminal, press `Ctrl + C`.
+
+## Testing
+
+### Backend tests
+
 ```bash
 cd backend
 pytest
-pytest --cov=app  # with coverage
+pytest --cov=app
 ```
 
-**Frontend:**
+### Frontend tests
+
 ```bash
 cd frontend
-npm test
+npx vitest run
 ```
 
----
+## Common Issues
+
+- `Address already in use` on port `8000` or `5173`: stop old processes and restart.
+- Frontend starts but API calls fail: confirm backend is running on `localhost:8000`.
+- Missing Python packages: make sure the backend virtual environment is activated before `pip install`.
+- Node module errors: run `npm install` again in `frontend`.
 
 ## API Overview
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/tasks` | GET, POST | List and create tasks |
-| `/api/tasks/{id}` | GET, PUT, DELETE | Get, update, delete task |
-| `/api/availability` | GET, POST | Manage availability windows |
-| `/api/constraints` | GET, POST | Manage constraints |
-| `/api/schedule` | POST | Generate schedule |
-| `/api/schedule/export` | POST | Export .ics file |
+- `GET/POST /api/tasks`
+- `GET/PUT/DELETE /api/tasks/{id}`
+- `GET/POST /api/availability`
+- `GET/POST /api/constraints`
+- `POST /api/schedule`
+- `POST /api/schedule/export`
 
----
+## Documentation
+
+Full project docs are in `docs/`.
+
+Recommended starting points:
+
+- [Architecture](docs/ARCHITECTURE.md)
+- [Scheduling Engine](docs/SCHEDULING_ENGINE.md)
+- [API Reference](docs/API.md)
+- [Testing Guide](docs/TESTING.md)
+- [Demo Prep](docs/DEMO_PREP.md)
+- [Docs Index](docs/README.md)
 
 ## Development Schedule (9 Weeks)
 
-| Week | Focus | Status |
-|------|-------|--------|
-| 1 | Project setup, architecture, CI | ✅ |
-| 2 | Task CRUD, database persistence | ✅ |
-| 3 | Availability & constraints modeling | ✅ |
-| 4 | Core scheduling engine (baseline) | ✅ |
-| 5 | Constraint enforcement, unit tests | ✅ |
-| 6 | Frontend integration | ✅ |
-| 7 | Calendar view & manual editing | ✅ |
-| 8 | .ics export, cross-platform testing | ✅ |
-| 9 | Refinement, edge cases, testing, documentation, demo prep | ✅ |
-
----
+- Week 1: Project setup, architecture, CI - complete
+- Week 2: Task CRUD, database persistence - complete
+- Week 3: Availability and constraints modeling - complete
+- Week 4: Core scheduling engine baseline - complete
+- Week 5: Constraint enforcement and unit tests - complete
+- Week 6: Frontend integration - complete
+- Week 7: Calendar view and manual editing - complete
+- Week 8: `.ics` export and cross-platform testing - complete
+- Week 9: Refinement, edge cases, testing, docs, demo prep - complete
 
 ## Team
 
-| Role | Responsibility |
-|------|----------------|
-| Frontend Lead (Ojas Bankhele) | React UI, calendar, user flows |
-| Backend Lead (Anjay Krishna) | API, database, testing, documentation |
-| Scheduling Engine Lead (Aarav Mittal) | Algorithm, constraint handling |
-| Export & Integration Lead (Josh Olmos) | .ics export, system integration |
-
----
+- Frontend Lead (Ojas Bankhele): React UI, calendar, user flows
+- Backend Lead (Anjay Krishna): API, database, testing, documentation
+- Scheduling Engine Lead (Aarav Mittal): algorithm and constraint handling
+- Export and Integration Lead (Josh Olmos): `.ics` export and system integration
 
 ## License
 

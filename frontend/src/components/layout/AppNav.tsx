@@ -1,5 +1,3 @@
-/** Primary navigation between app sections. */
-
 import type { AppView } from "../../types/app";
 
 interface AppNavProps {
@@ -9,7 +7,10 @@ interface AppNavProps {
 
 export function AppNav({ activeView, onSelectView }: AppNavProps) {
   function tabClass(view: AppView): string {
-    return activeView === view ? "active" : "";
+    if (activeView === view) {
+      return "active";
+    }
+    return "";
   }
 
   return (

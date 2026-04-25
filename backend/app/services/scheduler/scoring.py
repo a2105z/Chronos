@@ -1,5 +1,3 @@
-"""Scoring helpers for smarter task-to-slot allocation choices."""
-
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -24,22 +22,8 @@ class AllocationScoreWeights:
 
 
 DEFAULT_WEIGHTS = AllocationScoreWeights()
-DEADLINE_FOCUS_WEIGHTS = AllocationScoreWeights(
-    priority_weight=1.4,
-    deadline_weight=4.2,
-    duration_weight=0.9,
-    preference_weight=0.8,
-    continuity_weight=0.4,
-    lateness_penalty_weight=8.0,
-)
-DEEP_WORK_WEIGHTS = AllocationScoreWeights(
-    priority_weight=1.2,
-    deadline_weight=2.0,
-    duration_weight=1.6,
-    preference_weight=1.2,
-    continuity_weight=1.7,
-    lateness_penalty_weight=6.0,
-)
+DEADLINE_FOCUS_WEIGHTS = AllocationScoreWeights(priority_weight=1.4, deadline_weight=4.2, duration_weight=0.9, preference_weight=0.8, continuity_weight=0.4, lateness_penalty_weight=8.0)
+DEEP_WORK_WEIGHTS = AllocationScoreWeights(priority_weight=1.2, deadline_weight=2.0, duration_weight=1.6, preference_weight=1.2, continuity_weight=1.7, lateness_penalty_weight=6.0)
 
 
 def _to_utc_naive(value: datetime) -> datetime:
@@ -68,13 +52,7 @@ def _is_deep_work_task(task: Task) -> bool:
 
 
 def choose_allocation_style(tasks: list[Task], now: datetime | None = None) -> AllocationStyle:
-    """Pick a weight profile based on workload shape.
-
-    The goal is practical behavior without user-facing settings:
-    - deadline_focus: many near deadlines
-    - deep_work: many long non-splittable tasks
-    - balanced: default mix
-    """
+    """Pick a weight profile from workload shape: deadline_focus, deep_work, or balanced."""
     if not tasks:
         return "balanced"
 
@@ -116,11 +94,17 @@ def _time_preference_score(task: Task, slot_start: datetime) -> float:
 
     hour = slot_start.hour
     if preferred == "morning":
-        return 1.0 if 6 <= hour < 12 else 0.0
+        if 6 <= hour < 12:
+            return 1.0
+        return 0.0
     if preferred == "afternoon":
-        return 1.0 if 12 <= hour < 18 else 0.0
+        if 12 <= hour < 18:
+            return 1.0
+        return 0.0
     if preferred == "evening":
-        return 1.0 if 18 <= hour < 24 else 0.0
+        if 18 <= hour < 24:
+            return 1.0
+        return 0.0
     return 0.5
 
 
@@ -166,7 +150,7 @@ def score_splittable_candidate(
     allocated_minutes: int,
     remaining_before_pick: int,
     previous_end_for_task: datetime | None,
-    weights: AllocationScoreWeights = DEFAULT_WEIGHTS,
+    weights: AllocationScoreWeights = DEFAULT_WEIGHTS
 ) -> float:
     """Compute scalar utility for choosing one splittable chunk."""
     duration_fraction = 0.0
@@ -195,7 +179,7 @@ def score_fixed_candidate(
     task: Task,
     candidate_start: datetime,
     candidate_end: datetime,
-    weights: AllocationScoreWeights = DEFAULT_WEIGHTS,
+    weights: AllocationScoreWeights = DEFAULT_WEIGHTS
 ) -> float:
     """Compute scalar utility for placing one contiguous non-splittable block."""
     preference = _time_preference_score(task, candidate_start)

@@ -1,5 +1,3 @@
-"""Export scheduled blocks to .ics format for calendar apps."""
-
 from datetime import datetime, timezone
 
 from icalendar import Calendar, Event

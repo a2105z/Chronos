@@ -1,5 +1,3 @@
-/** Weekly schedule: load persisted blocks, regenerate, move/delete with server validation, export .ics. */
-
 import { useEffect, useState } from "react";
 import type { ReactElement } from "react";
 import axios from "axios";
@@ -9,7 +7,7 @@ import {
   generateSchedule,
   getSchedule,
   getTasks,
-  moveScheduleBlock,
+  moveScheduleBlock
 } from "../../api/client";
 import type { Task } from "../../types/task";
 import type { ScheduledBlock } from "../../types/schedule";
@@ -17,14 +15,14 @@ import {
   fromDatetimeLocalToIso,
   toDatetimeLocalValue,
   toIsoDateTime,
-  triggerBlobDownload,
+  triggerBlobDownload
 } from "../../utils/dates";
 import { addDays, getDateKey, getWeekDaysFromMonday } from "../../utils/calendarGrid";
 import {
   buildBlocksByDay,
   buildScheduledTaskIds,
   buildUnscheduledTasksByDay,
-  getListForDay,
+  getListForDay
 } from "../../utils/scheduleMaps";
 import { CalendarDayColumn } from "./CalendarDayColumn";
 import "./CalendarView.css";
@@ -48,10 +46,10 @@ export default function CalendarView({ refreshTrigger = 0, weekMonday, onWeekCha
   const [movingBlock, setMovingBlock] = useState<ScheduledBlock | null>(null);
   const [moveStartLocal, setMoveStartLocal] = useState("");
 
-  const rangeEndExclusive = addDays(weekMonday, 7);
-  const startIso = toIsoDateTime(weekMonday);
-  const endIso = toIsoDateTime(rangeEndExclusive);
-  const weekDays = getWeekDaysFromMonday(weekMonday, 7);
+  let rangeEndExclusive = addDays(weekMonday, 7);
+  let startIso = toIsoDateTime(weekMonday);
+  let endIso = toIsoDateTime(rangeEndExclusive);
+  let weekDays = getWeekDaysFromMonday(weekMonday, 7);
 
   async function syncWeekData(
     source: "persisted" | "regenerate",
@@ -60,11 +58,11 @@ export default function CalendarView({ refreshTrigger = 0, weekMonday, onWeekCha
     setLoading(true);
     setError(null);
     try {
-      const scheduleRequest =
-        source === "regenerate"
-          ? generateSchedule(startIso, endIso)
-          : getSchedule(startIso, endIso);
-      const [scheduleRes, tasksRes] = await Promise.all([scheduleRequest, getTasks()]);
+      let scheduleRequest = getSchedule(startIso, endIso);
+      if (source === "regenerate") {
+        scheduleRequest = generateSchedule(startIso, endIso);
+      }
+      let [scheduleRes, tasksRes] = await Promise.all([scheduleRequest, getTasks()]);
       setBlocks(scheduleRes.data);
       setTasks(tasksRes.data);
     } catch {
@@ -87,7 +85,7 @@ export default function CalendarView({ refreshTrigger = 0, weekMonday, onWeekCha
   async function handleExport() {
     setError(null);
     try {
-      const res = await exportSchedule(startIso, endIso);
+      let res = await exportSchedule(startIso, endIso);
       triggerBlobDownload(res.data, "chronos_schedule.ics");
     } catch {
       setError("Export failed.");
@@ -119,14 +117,18 @@ export default function CalendarView({ refreshTrigger = 0, weekMonday, onWeekCha
     }
     setMoveError(null);
     try {
-      const iso = fromDatetimeLocalToIso(moveStartLocal);
+      let iso = fromDatetimeLocalToIso(moveStartLocal);
       await moveScheduleBlock(movingBlock.id, iso);
       closeMove();
       await loadPersistedSchedule();
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.status === 422) {
-        const detail = err.response.data?.detail;
-        setMoveError(typeof detail === "string" ? detail : "That move is not allowed.");
+        let detail = err.response.data?.detail;
+        if (typeof detail === "string") {
+          setMoveError(detail);
+        } else {
+          setMoveError("That move is not allowed.");
+        }
       } else {
         setMoveError("Could not move this block.");
       }
@@ -146,20 +148,20 @@ export default function CalendarView({ refreshTrigger = 0, weekMonday, onWeekCha
     }
   }
 
-  const blocksByDay = buildBlocksByDay(blocks);
-  const scheduledTaskIds = buildScheduledTaskIds(blocks);
-  const unscheduledByDay = buildUnscheduledTasksByDay(tasks, weekMonday, scheduledTaskIds);
+  let blocksByDay = buildBlocksByDay(blocks);
+  let scheduledTaskIds = buildScheduledTaskIds(blocks);
+  let unscheduledByDay = buildUnscheduledTasksByDay(tasks, weekMonday, scheduledTaskIds);
 
-  const todayMidnight = new Date();
+  let todayMidnight = new Date();
   todayMidnight.setHours(0, 0, 0, 0);
 
-  const dayColumns: ReactElement[] = [];
+  let dayColumns: ReactElement[] = [];
   for (let i = 0; i < weekDays.length; i++) {
-    const day = weekDays[i];
-    const dayKey = getDateKey(day);
-    const dayBlocks = getListForDay(blocksByDay, dayKey);
-    const unscheduledTasks = getListForDay(unscheduledByDay, dayKey);
-    const isPastDay = day < todayMidnight;
+    let day = weekDays[i];
+    let dayKey = getDateKey(day);
+    let dayBlocks = getListForDay(blocksByDay, dayKey);
+    let unscheduledTasks = getListForDay(unscheduledByDay, dayKey);
+    let isPastDay = day < todayMidnight;
     dayColumns.push(
       <CalendarDayColumn
         key={dayKey}
@@ -183,7 +185,7 @@ export default function CalendarView({ refreshTrigger = 0, weekMonday, onWeekCha
     errorSection = <p className="calendar-error">{error}</p>;
   }
 
-  const gridSection = (
+  let gridSection = (
     <div className="week-grid-wrap">
       <div className="week-grid">{dayColumns}</div>
     </div>
@@ -191,6 +193,11 @@ export default function CalendarView({ refreshTrigger = 0, weekMonday, onWeekCha
 
   let moveOverlay: ReactElement | null = null;
   if (movingBlock !== null) {
+    let moveErrorSection: ReactElement | null = null;
+    if (moveError !== null) {
+      moveErrorSection = <p className="calendar-error">{moveError}</p>;
+    }
+
     moveOverlay = (
       <div className="move-overlay" role="dialog" aria-modal="true">
         <form className="move-dialog" onSubmit={submitMove}>
@@ -208,7 +215,7 @@ export default function CalendarView({ refreshTrigger = 0, weekMonday, onWeekCha
               required
             />
           </label>
-          {moveError !== null ? <p className="calendar-error">{moveError}</p> : null}
+          {moveErrorSection}
           <div className="move-actions">
             <button type="button" className="btn-secondary" onClick={closeMove}>
               Cancel
@@ -219,6 +226,16 @@ export default function CalendarView({ refreshTrigger = 0, weekMonday, onWeekCha
           </div>
         </form>
       </div>
+    );
+  }
+
+  let emptyHintSection: ReactElement | null = null;
+  if (blocks.length === 0 && !loading) {
+    emptyHintSection = (
+      <p className="calendar-hint">
+        No blocks saved for this week yet. Regenerate runs the scheduler and stores the result so you can move or
+        delete blocks.
+      </p>
     );
   }
 
@@ -246,12 +263,7 @@ export default function CalendarView({ refreshTrigger = 0, weekMonday, onWeekCha
         </div>
       </div>
 
-      {blocks.length === 0 && !loading ? (
-        <p className="calendar-hint">
-          No blocks saved for this week yet. Regenerate runs the scheduler and stores the result so you can move or
-          delete blocks.
-        </p>
-      ) : null}
+      {emptyHintSection}
 
       {errorSection}
       {gridSection}

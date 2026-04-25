@@ -1,5 +1,3 @@
-/** Create-task form fields and submit. */
-
 import type { TaskCreate } from "../../types/task";
 
 interface TaskFormProps {
@@ -35,7 +33,7 @@ export function TaskForm({
   onPreferredTimeChange,
   onSplittableChange,
   onFinishWindowStartChange,
-  onFinishWindowEndChange,
+  onFinishWindowEndChange
 }: TaskFormProps) {
   let preferredSelectValue = formData.preferred_time_of_day;
   if (preferredSelectValue === undefined || preferredSelectValue === null) {

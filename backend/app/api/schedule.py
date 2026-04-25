@@ -19,7 +19,7 @@ router = APIRouter(prefix="/api/schedule", tags=["schedule"])
 def listSchedule(
     start_date: datetime = Query(..., description="Range start (inclusive)"),
     end_date: datetime = Query(..., description="Range end (exclusive or overlap query)"),
-    session: Session = Depends(getSession),
+    session: Session = Depends(getSession)
 ) -> list[ScheduledBlockRead]:
     """Return persisted schedule blocks overlapping the given range without regenerating."""
     return listBlocksInRange(session, start_date, end_date)
@@ -36,7 +36,7 @@ def generateSchedule(request: ScheduleGenerateRequest, session: Session = Depend
 def moveScheduledBlock(
     block_id: int,
     body: ScheduledBlockMove,
-    session: Session = Depends(getSession),
+    session: Session = Depends(getSession)
 ) -> ScheduledBlockRead:
     """Move a block to a new start time; duration is preserved. Validates hard constraints."""
     block = session.get(ScheduledBlock, block_id)
@@ -81,5 +81,5 @@ def exportSchedule(request: ScheduleGenerateRequest, session: Session = Depends(
         media_type="text/calendar",
         headers={
             "Content-Disposition": "attachment; filename=chronos_schedule.ics"
-        },
+        }
     )

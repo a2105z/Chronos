@@ -13,7 +13,7 @@ def testEngine():
     eng = create_engine(
         "sqlite://",
         connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
+        poolclass=StaticPool
     )
     SQLModel.metadata.create_all(eng)
     return eng

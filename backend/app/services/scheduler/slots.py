@@ -1,5 +1,3 @@
-"""Time slot discretization - converts availability into 15-minute slots."""
-
 from datetime import datetime, timedelta
 
 from app.models.availability import AvailabilityWindow
@@ -50,28 +48,33 @@ def buildAvailableSlots(startDate: datetime, endDate: datetime, availabilityWind
 
     current = startDate.replace(hour=0, minute=0, second=0, microsecond=0)
     end = endDate
+    totalDays = (end - current).days + 1
 
-    while current < end:
-        dayOfWeek = current.weekday()
+    for dayOffset in range(totalDays):
+        currentDay = current + timedelta(days=dayOffset)
+        if currentDay >= end:
+            break
+        dayOfWeek = currentDay.weekday()
         windowsForDay = []
         for w in availabilityWindows:
             if w.day_of_week == dayOfWeek:
                 windowsForDay.append(w)
 
         for window in windowsForDay:
-            dayStart = current.replace(hour=0, minute=0, second=0, microsecond=0)
+            dayStart = currentDay.replace(hour=0, minute=0, second=0, microsecond=0)
             slotStart = dayStart + timedelta(minutes=window.start_minutes)
             slotEnd = dayStart + timedelta(minutes=window.end_minutes)
 
-            slotBegin = slotStart
-            while slotBegin < slotEnd:
+            totalWindowMinutes = int((slotEnd - slotStart).total_seconds() / 60)
+            slotCount = (totalWindowMinutes + SLOT_SIZE_MINUTES - 1) // SLOT_SIZE_MINUTES
+            for slotIndex in range(slotCount):
+                slotBegin = slotStart + timedelta(minutes=SLOT_SIZE_MINUTES * slotIndex)
                 slotFinish = slotBegin + timedelta(minutes=SLOT_SIZE_MINUTES)
                 if slotFinish > slotEnd:
                     break
                 if slotBegin >= end:
                     break
                 if slotFinish <= startDate:
-                    slotBegin = slotFinish
                     continue
 
                 clippedStart = slotBegin
@@ -81,14 +84,9 @@ def buildAvailableSlots(startDate: datetime, endDate: datetime, availabilityWind
                 if clippedEnd > end:
                     clippedEnd = end
                 if clippedStart >= clippedEnd:
-                    slotBegin = slotFinish
                     continue
 
                 if not isSlotBlocked(clippedStart, clippedEnd, protected):
                     slots.append((clippedStart, clippedEnd))
-
-                slotBegin = slotFinish
-
-        current += timedelta(days=1)
 
     return slots

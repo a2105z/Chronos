@@ -1,5 +1,3 @@
-"""Scheduling package — lazy-load engine to avoid import cycles with persistence."""
-
 from typing import Any
 
 __all__ = ["SchedulingEngine"]

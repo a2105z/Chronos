@@ -14,7 +14,7 @@ function mkTask(id: number, name: string, deadline?: string): Task {
     preferred_time_of_day: "anytime",
     splittable: false,
     created_at: "2030-01-01T00:00:00",
-    updated_at: "2030-01-01T00:00:00",
+    updated_at: "2030-01-01T00:00:00"
   };
 }
 
@@ -27,7 +27,7 @@ describe("scheduleMaps", () => {
         task_name: "Task A",
         start_time: "2030-01-07T09:00:00",
         end_time: "2030-01-07T10:00:00",
-        duration_minutes: 60,
+        duration_minutes: 60
       },
       {
         id: 2,
@@ -35,8 +35,8 @@ describe("scheduleMaps", () => {
         task_name: "Task B",
         start_time: "2030-01-08T11:00:00",
         end_time: "2030-01-08T12:00:00",
-        duration_minutes: 60,
-      },
+        duration_minutes: 60
+      }
     ];
 
     const grouped = buildBlocksByDay(blocks);
@@ -49,7 +49,7 @@ describe("scheduleMaps", () => {
     const tasks: Task[] = [
       mkTask(1, "Already Scheduled"),
       mkTask(2, "Deadline Task", "2030-01-09T14:00:00"),
-      mkTask(3, "No Deadline Task"),
+      mkTask(3, "No Deadline Task")
     ];
     const scheduledIds = buildScheduledTaskIds([
       {
@@ -58,13 +58,22 @@ describe("scheduleMaps", () => {
         task_name: "Already Scheduled",
         start_time: "2030-01-07T09:00:00",
         end_time: "2030-01-07T10:00:00",
-        duration_minutes: 60,
-      },
+        duration_minutes: 60
+      }
     ]);
 
     const grouped = buildUnscheduledTasksByDay(tasks, weekStart, scheduledIds);
-    const monday = getListForDay(grouped, "2030-01-07").map((t) => t.name);
-    const wednesday = getListForDay(grouped, "2030-01-09").map((t) => t.name);
+    const mondayTasks = getListForDay(grouped, "2030-01-07");
+    const monday: string[] = [];
+    for (let i = 0; i < mondayTasks.length; i++) {
+      monday.push(mondayTasks[i].name);
+    }
+
+    const wednesdayTasks = getListForDay(grouped, "2030-01-09");
+    const wednesday: string[] = [];
+    for (let i = 0; i < wednesdayTasks.length; i++) {
+      wednesday.push(wednesdayTasks[i].name);
+    }
 
     expect(monday).toContain("No Deadline Task");
     expect(wednesday).toContain("Deadline Task");

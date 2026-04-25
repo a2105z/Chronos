@@ -1,5 +1,3 @@
-"""Greedy task allocation into available slots."""
-
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Optional
@@ -8,12 +6,7 @@ from app.models.constraint import Constraint
 from app.models.task import Task
 from app.services.scheduler.constraints import getMaxContinuousWorkMinutes
 from app.services.scheduler.intervals import BusyTimeline
-from app.services.scheduler.scoring import (
-    choose_allocation_style,
-    score_fixed_candidate,
-    score_splittable_candidate,
-    weights_for_style,
-)
+from app.services.scheduler.scoring import choose_allocation_style, score_fixed_candidate, score_splittable_candidate, weights_for_style
 
 
 @dataclass
@@ -119,27 +112,9 @@ def allocateTasks(tasks: list[Task], slots: list[tuple[datetime, datetime]], con
 
         mustSplit = maxContinuousWork is not None and remaining > maxContinuousWork
         if task.splittable or mustSplit:
-            allocateSplittable(
-                task,
-                remaining,
-                slots,
-                timeline,
-                blocks,
-                lastEndByTask,
-                weights,
-                maxContinuousWork,
-            )
+            allocateSplittable(task, remaining, slots, timeline, blocks, lastEndByTask, weights, maxContinuousWork)
         else:
-            allocateFixed(
-                task,
-                remaining,
-                slots,
-                timeline,
-                blocks,
-                lastEndByTask,
-                weights,
-                maxContinuousWork,
-            )
+            allocateFixed(task, remaining, slots, timeline, blocks, lastEndByTask, weights, maxContinuousWork)
 
     return blocks
 
@@ -153,10 +128,12 @@ def allocateSplittable(
     blocks: list[AllocatedBlock],
     lastEndByTask: dict[int, datetime],
     weights,
-    maxContinuousWork: Optional[int] = None,
+    maxContinuousWork: Optional[int] = None
 ) -> None:
     """Allocate a splittable task by repeatedly choosing the best-scored chunk."""
-    while remaining > 0:
+    for _ in range(len(slots)):
+        if remaining <= 0:
+            break
         bestChoice: tuple[float, datetime, datetime, int] | None = None
         previousEnd = lastEndByTask.get(task.id)
 
@@ -174,15 +151,7 @@ def allocateSplittable(
                 continue
 
             blockEnd = slotStart + timedelta(minutes=allocMinutes)
-            score = score_splittable_candidate(
-                task=task,
-                slot_start=slotStart,
-                slot_end=blockEnd,
-                allocated_minutes=allocMinutes,
-                remaining_before_pick=remaining,
-                previous_end_for_task=previousEnd,
-                weights=weights,
-            )
+            score = score_splittable_candidate(task=task, slot_start=slotStart, slot_end=blockEnd, allocated_minutes=allocMinutes, remaining_before_pick=remaining, previous_end_for_task=previousEnd, weights=weights)
 
             if bestChoice is None:
                 bestChoice = (score, slotStart, blockEnd, allocMinutes)
@@ -196,13 +165,7 @@ def allocateSplittable(
             break
 
         _, bestStart, bestEnd, bestMinutes = bestChoice
-        newBlock = AllocatedBlock(
-            task_id=task.id,
-            task_name=task.name,
-            start_time=bestStart,
-            end_time=bestEnd,
-            duration_minutes=bestMinutes,
-        )
+        newBlock = AllocatedBlock(task_id=task.id, task_name=task.name, start_time=bestStart, end_time=bestEnd, duration_minutes=bestMinutes)
         blocks.append(newBlock)
         timeline.add(bestStart, bestEnd)
         lastEndByTask[task.id] = bestEnd
@@ -214,7 +177,7 @@ def _findFixedCandidates(
     task: Task,
     requiredMinutes: int,
     slots: list[tuple[datetime, datetime]],
-    timeline: BusyTimeline,
+    timeline: BusyTimeline
 ) -> list[tuple[datetime, datetime]]:
     """Return all contiguous candidate ranges that can hold requiredMinutes."""
     candidates: list[tuple[datetime, datetime]] = []
@@ -258,7 +221,7 @@ def allocateFixed(
     blocks: list[AllocatedBlock],
     lastEndByTask: dict[int, datetime],
     weights,
-    maxContinuousWork: Optional[int] = None,
+    maxContinuousWork: Optional[int] = None
 ) -> None:
     """Allocate a non-splittable task by choosing the best contiguous candidate."""
     allocMinutes = remaining
@@ -289,13 +252,7 @@ def allocateFixed(
         return
 
     chosenStart, chosenEnd = bestRange
-    newBlock = AllocatedBlock(
-        task_id=task.id,
-        task_name=task.name,
-        start_time=chosenStart,
-        end_time=chosenEnd,
-        duration_minutes=allocMinutes,
-    )
+    newBlock = AllocatedBlock(task_id=task.id, task_name=task.name, start_time=chosenStart, end_time=chosenEnd, duration_minutes=allocMinutes)
     blocks.append(newBlock)
     timeline.add(chosenStart, chosenEnd)
     lastEndByTask[task.id] = chosenEnd

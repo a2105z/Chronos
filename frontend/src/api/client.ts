@@ -1,31 +1,26 @@
-/**
- * Public API surface for the frontend.
- * Implementation is split under ./ for easier navigation.
- */
-
 export { api } from "./instance";
 export {
   getTasks,
   createTask,
   updateTask,
-  deleteTask,
+  deleteTask
 } from "./tasksApi";
 export {
   getAvailability,
   createAvailability,
   updateAvailability,
-  deleteAvailability,
+  deleteAvailability
 } from "./availabilityApi";
 export {
   getConstraints,
   createConstraint,
   updateConstraint,
-  deleteConstraint,
+  deleteConstraint
 } from "./constraintsApi";
 export {
   getSchedule,
   generateSchedule,
   moveScheduleBlock,
   deleteScheduleBlock,
-  exportSchedule,
+  exportSchedule
 } from "./scheduleApi";

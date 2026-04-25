@@ -4,7 +4,7 @@ import App from "./App";
 import { getRootElement } from "./lib/dom";
 import "./index.css";
 
-const rootElement = getRootElement();
+let rootElement = getRootElement();
 
 ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>

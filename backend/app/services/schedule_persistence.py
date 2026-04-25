@@ -1,5 +1,3 @@
-"""Persist scheduled blocks and read them back for API and export."""
-
 from __future__ import annotations
 
 import uuid
@@ -15,10 +13,7 @@ from app.services.scheduler.allocator import AllocatedBlock
 
 def deleteBlocksIntersectingRange(session: Session, rangeStart: datetime, rangeEnd: datetime) -> None:
     """Remove persisted blocks that overlap [rangeStart, rangeEnd)."""
-    stmt = select(ScheduledBlock).where(
-        ScheduledBlock.start_time < rangeEnd,
-        ScheduledBlock.end_time > rangeStart,
-    )
+    stmt = select(ScheduledBlock).where(ScheduledBlock.start_time < rangeEnd, ScheduledBlock.end_time > rangeStart)
     for block in session.exec(stmt).all():
         session.delete(block)
 
@@ -26,29 +21,18 @@ def deleteBlocksIntersectingRange(session: Session, rangeStart: datetime, rangeE
 def insertAllocatedBlocks(session: Session, allocated: list[AllocatedBlock], runId: str) -> None:
     """Insert new rows for a scheduling run."""
     for b in allocated:
-        row = ScheduledBlock(
-            task_id=b.task_id,
-            start_time=b.start_time,
-            end_time=b.end_time,
-            duration_minutes=b.duration_minutes,
-            schedule_run_id=runId,
-        )
+        row = ScheduledBlock(task_id=b.task_id, start_time=b.start_time, end_time=b.end_time, duration_minutes=b.duration_minutes, schedule_run_id=runId)
         session.add(row)
 
 
 def scheduledBlockToRead(session: Session, block: ScheduledBlock) -> ScheduledBlockRead:
     task = session.get(Task, block.task_id)
-    taskName = task.name if task else "Unknown task"
+    taskName = "Unknown task"
+    if task is not None:
+        taskName = task.name
     if block.id is None:
         raise ValueError("Scheduled block must have an id")
-    return ScheduledBlockRead(
-        id=block.id,
-        task_id=block.task_id,
-        task_name=taskName,
-        start_time=block.start_time,
-        end_time=block.end_time,
-        duration_minutes=block.duration_minutes,
-    )
+    return ScheduledBlockRead(id=block.id, task_id=block.task_id, task_name=taskName, start_time=block.start_time, end_time=block.end_time, duration_minutes=block.duration_minutes)
 
 
 def listBlocksInRange(session: Session, rangeStart: datetime, rangeEnd: datetime) -> list[ScheduledBlockRead]:
@@ -60,7 +44,10 @@ def listBlocksInRange(session: Session, rangeStart: datetime, rangeEnd: datetime
         .order_by(ScheduledBlock.start_time)
     )
     rows = list(session.exec(stmt).all())
-    return [scheduledBlockToRead(session, r) for r in rows]
+    result: list[ScheduledBlockRead] = []
+    for row in rows:
+        result.append(scheduledBlockToRead(session, row))
+    return result
 
 
 def deleteBlocksForTask(session: Session, taskId: int) -> None:
@@ -74,7 +61,7 @@ def replaceBlocksForRange(
     session: Session,
     rangeStart: datetime,
     rangeEnd: datetime,
-    allocated: list[AllocatedBlock],
+    allocated: list[AllocatedBlock]
 ) -> list[ScheduledBlockRead]:
     """Replace overlapping persisted blocks with a new allocation."""
     deleteBlocksIntersectingRange(session, rangeStart, rangeEnd)

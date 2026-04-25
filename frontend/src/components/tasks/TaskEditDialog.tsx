@@ -1,10 +1,9 @@
-/** Modal-style editor for an existing task (PUT /api/tasks/:id). */
-
 import { useState } from "react";
 import { updateTask } from "../../api/client";
 import type { PreferredTimeOfDay, Task, TaskCreate } from "../../types/task";
 import { isoToDateInput, toIsoDateFromInput } from "../../utils/dates";
 import "./TaskEditDialog.css";
+import type { ReactElement } from "react";
 
 interface TaskEditDialogProps {
   task: Task;
@@ -32,14 +31,14 @@ export function TaskEditDialog({ task, onClose, onSaved }: TaskEditDialogProps) 
     }
     setSaving(true);
     setError(null);
-    const payload: Partial<TaskCreate> = {
+    let payload: Partial<TaskCreate> = {
       name: name.trim(),
       estimated_duration_minutes: estimatedMinutes,
       priority,
       splittable,
       preferred_time_of_day: preferred,
       earliest_start: toIsoDateFromInput(earliestStart),
-      deadline: toIsoDateFromInput(deadline),
+      deadline: toIsoDateFromInput(deadline)
     };
     try {
       await updateTask(task.id, payload);
@@ -52,6 +51,16 @@ export function TaskEditDialog({ task, onClose, onSaved }: TaskEditDialogProps) 
     }
   }
 
+  let errorBanner: ReactElement | null = null;
+  if (error !== null) {
+    errorBanner = <p className="form-error-banner">{error}</p>;
+  }
+
+  let saveButtonText = "Save";
+  if (saving) {
+    saveButtonText = "Saving…";
+  }
+
   return (
     <div className="task-edit-overlay" role="dialog" aria-modal="true" aria-labelledby="task-edit-title">
       <div className="task-edit-dialog">
@@ -62,7 +71,7 @@ export function TaskEditDialog({ task, onClose, onSaved }: TaskEditDialogProps) 
           </button>
         </div>
         <form className="task-edit-form" onSubmit={handleSubmit}>
-          {error !== null ? <p className="form-error-banner">{error}</p> : null}
+          {errorBanner}
           <label>
             Name
             <input value={name} onChange={(e) => setName(e.target.value)} required />
@@ -111,7 +120,7 @@ export function TaskEditDialog({ task, onClose, onSaved }: TaskEditDialogProps) 
               Cancel
             </button>
             <button type="submit" className="btn-primary" disabled={saving}>
-              {saving ? "Saving…" : "Save"}
+              {saveButtonText}
             </button>
           </div>
         </form>

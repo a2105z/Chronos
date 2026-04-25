@@ -1,5 +1,3 @@
-/** Chronos — main shell: tasks, availability, constraints, weekly calendar. */
-
 import { useState } from "react";
 import type { ReactNode } from "react";
 import type { AppView } from "./types/app";

@@ -1,5 +1,3 @@
-"""Availability helpers - fetch windows, check if time is available."""
-
 from datetime import datetime
 from typing import TYPE_CHECKING
 

@@ -9,8 +9,8 @@ def test_create_protected_block(client: TestClient):
             "constraint_type": "protected_block",
             "day_of_week": 0,
             "start_minutes": 720,
-            "end_minutes": 780,
-        },
+            "end_minutes": 780
+        }
     )
     assert response.status_code == 201
     data = response.json()
@@ -25,8 +25,8 @@ def test_create_protected_block_missing_fields(client: TestClient):
         "/api/constraints",
         json={
             "constraint_type": "protected_block",
-            "day_of_week": 0,
-        },
+            "day_of_week": 0
+        }
     )
     assert response.status_code == 422
 
@@ -38,8 +38,8 @@ def test_create_protected_block_invalid_range(client: TestClient):
             "constraint_type": "protected_block",
             "day_of_week": 1,
             "start_minutes": 780,
-            "end_minutes": 720,
-        },
+            "end_minutes": 720
+        }
     )
     assert response.status_code == 422
 
@@ -49,8 +49,8 @@ def test_create_max_continuous_work(client: TestClient):
         "/api/constraints",
         json={
             "constraint_type": "max_continuous_work",
-            "value": 120,
-        },
+            "value": 120
+        }
     )
     assert response.status_code == 201
     data = response.json()
@@ -61,7 +61,7 @@ def test_create_max_continuous_work(client: TestClient):
 def test_create_max_continuous_work_missing_value(client: TestClient):
     response = client.post(
         "/api/constraints",
-        json={"constraint_type": "max_continuous_work"},
+        json={"constraint_type": "max_continuous_work"}
     )
     assert response.status_code == 422
 
@@ -69,7 +69,7 @@ def test_create_max_continuous_work_missing_value(client: TestClient):
 def test_create_max_continuous_work_zero_value(client: TestClient):
     response = client.post(
         "/api/constraints",
-        json={"constraint_type": "max_continuous_work", "value": 0},
+        json={"constraint_type": "max_continuous_work", "value": 0}
     )
     assert response.status_code == 422
 
@@ -79,8 +79,8 @@ def test_create_invalid_constraint_type(client: TestClient):
         "/api/constraints",
         json={
             "constraint_type": "invalid_type",
-            "value": 60,
-        },
+            "value": 60
+        }
     )
     assert response.status_code == 422
 
@@ -92,8 +92,8 @@ def test_list_constraints(client: TestClient):
             "constraint_type": "protected_block",
             "day_of_week": 2,
             "start_minutes": 720,
-            "end_minutes": 780,
-        },
+            "end_minutes": 780
+        }
     )
     response = client.get("/api/constraints")
     assert response.status_code == 200
@@ -105,8 +105,8 @@ def test_get_constraint(client: TestClient):
         "/api/constraints",
         json={
             "constraint_type": "max_continuous_work",
-            "value": 90,
-        },
+            "value": 90
+        }
     )
     constraint_id = create_resp.json()["id"]
     response = client.get(f"/api/constraints/{constraint_id}")
@@ -122,12 +122,12 @@ def test_get_constraint_not_found(client: TestClient):
 def test_update_constraint(client: TestClient):
     create_resp = client.post(
         "/api/constraints",
-        json={"constraint_type": "max_continuous_work", "value": 60},
+        json={"constraint_type": "max_continuous_work", "value": 60}
     )
     constraint_id = create_resp.json()["id"]
     response = client.put(
         f"/api/constraints/{constraint_id}",
-        json={"value": 120},
+        json={"value": 120}
     )
     assert response.status_code == 200
     assert response.json()["value"] == 120
@@ -136,7 +136,7 @@ def test_update_constraint(client: TestClient):
 def test_delete_constraint(client: TestClient):
     create_resp = client.post(
         "/api/constraints",
-        json={"constraint_type": "max_continuous_work", "value": 45},
+        json={"constraint_type": "max_continuous_work", "value": 45}
     )
     constraint_id = create_resp.json()["id"]
     response = client.delete(f"/api/constraints/{constraint_id}")

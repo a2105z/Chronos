@@ -1,5 +1,3 @@
-/** Availability window endpoints. */
-
 import { api } from "./instance";
 import type { AvailabilityCreate } from "../types/availability";
 

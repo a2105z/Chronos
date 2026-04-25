@@ -1,6 +1,5 @@
-/** Protected blocks and max continuous work constraints. */
-
 import { useEffect, useState } from "react";
+import type { ReactElement } from "react";
 import { getConstraints, createConstraint, deleteConstraint } from "../../api/client";
 import type { Constraint } from "../../types/constraint";
 import { minutesToTimeInput, timeInputToMinutes, WEEKDAY_LABELS } from "../../utils/timeMinutes";
@@ -21,7 +20,7 @@ export default function ConstraintsView() {
     setLoading(true);
     setError(null);
     try {
-      const res = await getConstraints();
+      let res = await getConstraints();
       setRows(res.data);
     } catch {
       setError("Could not load constraints.");
@@ -37,8 +36,8 @@ export default function ConstraintsView() {
 
   async function handleAddProtected(event: React.FormEvent) {
     event.preventDefault();
-    const sm = timeInputToMinutes(protStart);
-    const em = timeInputToMinutes(protEnd);
+    let sm = timeInputToMinutes(protStart);
+    let em = timeInputToMinutes(protEnd);
     if (em <= sm) {
       setError("Protected block end must be after start.");
       return;
@@ -49,7 +48,7 @@ export default function ConstraintsView() {
         constraint_type: "protected_block",
         day_of_week: protDay,
         start_minutes: sm,
-        end_minutes: em,
+        end_minutes: em
       });
       await load();
     } catch {
@@ -67,7 +66,7 @@ export default function ConstraintsView() {
     try {
       await createConstraint({
         constraint_type: "max_continuous_work",
-        value: maxMinutes,
+        value: maxMinutes
       });
       await load();
     } catch {
@@ -86,7 +85,7 @@ export default function ConstraintsView() {
 
   function describeRow(c: Constraint): string {
     if (c.constraint_type === "protected_block") {
-      const d = c.day_of_week ?? 0;
+      let d = c.day_of_week ?? 0;
       return `${WEEKDAY_LABELS[d]} ${minutesToTimeInput(c.start_minutes ?? 0)}–${minutesToTimeInput(
         c.end_minutes ?? 0
       )}`;
@@ -101,6 +100,42 @@ export default function ConstraintsView() {
     return <div className="panel-view">Loading constraints…</div>;
   }
 
+  let errorBanner: ReactElement | null = null;
+  if (error !== null) {
+    errorBanner = <p className="form-error-banner">{error}</p>;
+  }
+
+  let emptyStateRow: ReactElement | null = null;
+  if (rows.length === 0) {
+    emptyStateRow = <li className="muted">No constraints configured.</li>;
+  }
+
+  let weekdayOptions: ReactElement[] = [];
+  for (let idx = 0; idx < WEEKDAY_LABELS.length; idx++) {
+    let label = WEEKDAY_LABELS[idx];
+    weekdayOptions.push(
+      <option key={label} value={idx}>
+        {label}
+      </option>
+    );
+  }
+
+  let constraintRows: ReactElement[] = [];
+  for (let i = 0; i < rows.length; i++) {
+    let constraint = rows[i];
+    constraintRows.push(
+      <li key={constraint.id} className="constraints-row">
+        <span>
+          <strong>{constraint.constraint_type}</strong>
+          <span className="muted"> · {describeRow(constraint)}</span>
+        </span>
+        <button type="button" className="btn-danger btn-compact" onClick={() => handleDelete(constraint.id)}>
+          Remove
+        </button>
+      </li>
+    );
+  }
+
   return (
     <div className="panel-view constraints-view">
       <div className="panel-header">
@@ -111,7 +146,7 @@ export default function ConstraintsView() {
         </p>
       </div>
 
-      {error !== null ? <p className="form-error-banner">{error}</p> : null}
+      {errorBanner}
 
       <section className="constraint-section">
         <h3>Protected time</h3>
@@ -119,11 +154,7 @@ export default function ConstraintsView() {
           <label>
             Day
             <select value={protDay} onChange={(e) => setProtDay(parseInt(e.target.value, 10))}>
-              {WEEKDAY_LABELS.map((label, idx) => (
-                <option key={label} value={idx}>
-                  {label}
-                </option>
-              ))}
+              {weekdayOptions}
             </select>
           </label>
           <div className="inline-time-row">
@@ -162,18 +193,8 @@ export default function ConstraintsView() {
 
       <h3>Active constraints</h3>
       <ul className="constraints-list">
-        {rows.length === 0 ? <li className="muted">No constraints configured.</li> : null}
-        {rows.map((c) => (
-          <li key={c.id} className="constraints-row">
-            <span>
-              <strong>{c.constraint_type}</strong>
-              <span className="muted"> · {describeRow(c)}</span>
-            </span>
-            <button type="button" className="btn-danger btn-compact" onClick={() => handleDelete(c.id)}>
-              Remove
-            </button>
-          </li>
-        ))}
+        {emptyStateRow}
+        {constraintRows}
       </ul>
     </div>
   );

@@ -1,5 +1,3 @@
-/** Single task row with delete action. */
-
 import type { Task } from "../../types/task";
 import { buildTaskMetaLine } from "./formatTaskMeta";
 
@@ -14,7 +12,7 @@ export function TaskRow({ task, onDelete, onEdit }: TaskRowProps) {
     onDelete(task.id);
   }
 
-  const metaLine = buildTaskMetaLine(task);
+  let metaLine = buildTaskMetaLine(task);
 
   function handleEditClick() {
     onEdit(task);

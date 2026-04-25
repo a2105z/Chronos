@@ -1,5 +1,3 @@
-"""Database configuration and session management."""
-
 from typing import Generator
 
 from sqlmodel import SQLModel, create_engine, Session

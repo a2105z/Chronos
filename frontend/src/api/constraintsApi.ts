@@ -1,5 +1,3 @@
-/** Constraint endpoints. */
-
 import { api } from "./instance";
 import type { ConstraintCreate } from "../types/constraint";
 

@@ -1,5 +1,3 @@
-"""Tests for task API endpoints."""
-
 import pytest
 from fastapi.testclient import TestClient
 
@@ -12,8 +10,8 @@ def test_create_task(client: TestClient):
             "name": "Study for exam",
             "estimated_duration_minutes": 60,
             "priority": 1,
-            "splittable": True,
-        },
+            "splittable": True
+        }
     )
     assert response.status_code == 201
     data = response.json()
@@ -36,7 +34,7 @@ def test_list_tasks_after_create(client: TestClient):
     """Listing tasks returns created tasks."""
     client.post(
         "/api/tasks",
-        json={"name": "Task 1", "estimated_duration_minutes": 30},
+        json={"name": "Task 1", "estimated_duration_minutes": 30}
     )
     response = client.get("/api/tasks")
     assert response.status_code == 200
@@ -61,7 +59,7 @@ def test_get_task_success(client: TestClient):
     """Get task by ID returns task when it exists."""
     create_resp = client.post(
         "/api/tasks",
-        json={"name": "Find me", "estimated_duration_minutes": 45},
+        json={"name": "Find me", "estimated_duration_minutes": 45}
     )
     task_id = create_resp.json()["id"]
     response = client.get(f"/api/tasks/{task_id}")
@@ -81,12 +79,12 @@ def test_update_task_success(client: TestClient):
     """Update task modifies and returns updated task."""
     create_resp = client.post(
         "/api/tasks",
-        json={"name": "Original", "estimated_duration_minutes": 30, "priority": 0},
+        json={"name": "Original", "estimated_duration_minutes": 30, "priority": 0}
     )
     task_id = create_resp.json()["id"]
     response = client.put(
         f"/api/tasks/{task_id}",
-        json={"name": "Updated", "estimated_duration_minutes": 60, "priority": 2},
+        json={"name": "Updated", "estimated_duration_minutes": 60, "priority": 2}
     )
     assert response.status_code == 200
     data = response.json()
@@ -99,7 +97,7 @@ def test_update_task_partial(client: TestClient):
     """Update task with only some fields leaves others unchanged."""
     create_resp = client.post(
         "/api/tasks",
-        json={"name": "Original", "estimated_duration_minutes": 45, "splittable": False},
+        json={"name": "Original", "estimated_duration_minutes": 45, "splittable": False}
     )
     task_id = create_resp.json()["id"]
     response = client.put(f"/api/tasks/{task_id}", json={"name": "Renamed"})
@@ -114,7 +112,7 @@ def test_update_task_not_found(client: TestClient):
     """Update task returns 404 when task does not exist."""
     response = client.put(
         "/api/tasks/99999",
-        json={"name": "Does not matter", "estimated_duration_minutes": 10},
+        json={"name": "Does not matter", "estimated_duration_minutes": 10}
     )
     assert response.status_code == 404
 
@@ -123,7 +121,7 @@ def test_delete_task_success(client: TestClient):
     """Delete task removes it and returns 204."""
     create_resp = client.post(
         "/api/tasks",
-        json={"name": "To delete", "estimated_duration_minutes": 15},
+        json={"name": "To delete", "estimated_duration_minutes": 15}
     )
     task_id = create_resp.json()["id"]
     response = client.delete(f"/api/tasks/{task_id}")
@@ -142,7 +140,7 @@ def test_task_persistence(client: TestClient):
     """Tasks persist across multiple requests."""
     create_resp = client.post(
         "/api/tasks",
-        json={"name": "Persistent", "estimated_duration_minutes": 90},
+        json={"name": "Persistent", "estimated_duration_minutes": 90}
     )
     task_id = create_resp.json()["id"]
     list_resp = client.get("/api/tasks")

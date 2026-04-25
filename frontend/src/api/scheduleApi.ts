@@ -1,5 +1,3 @@
-/** Schedule generation, listing, block edits, and export. */
-
 import { api } from "./instance";
 
 export function getSchedule(startDate: string, endDate: string) {
@@ -10,7 +8,7 @@ export function generateSchedule(startDate: string, endDate: string) {
   return api.post("/schedule", {
     start_date: startDate,
     end_date: endDate,
-    replace_existing: true,
+    replace_existing: true
   });
 }
 

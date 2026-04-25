@@ -1,5 +1,3 @@
-/** Default values for the "create task" form. */
-
 import type { TaskCreate } from "../../types/task";
 
 export const DEFAULT_TASK_FORM: TaskCreate = {
@@ -8,5 +6,5 @@ export const DEFAULT_TASK_FORM: TaskCreate = {
   priority: 0,
   deadline: null,
   preferred_time_of_day: "anytime",
-  splittable: false,
+  splittable: false
 };

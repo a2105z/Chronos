@@ -14,6 +14,13 @@ Chronos takes tasks, availability windows, and scheduling constraints, then buil
 - Handles task priority, deadlines, and preferred time of day.
 - Supports `.ics` export for calendar apps.
 
+## Developers
+
+- Aarav Mittal - Scheduling Engine and Algorithms
+- Anjay Krishnan - Backend and Documentation
+- Ojas Bankhele - Frontend
+- Josh Olmos - Export and Integration
+
 ## Quick Start (Run the App Locally)
 
 ### Prerequisites

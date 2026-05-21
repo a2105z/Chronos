@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
@@ -6,7 +6,19 @@ from app.models.constraint import Constraint
 from app.models.task import Task
 from app.services.scheduler.constraints import getMaxContinuousWorkMinutes
 from app.services.scheduler.intervals import BusyTimeline
-from app.services.scheduler.scoring import choose_allocation_style, score_fixed_candidate, score_splittable_candidate, weights_for_style
+from app.services.scheduler.scoring import (
+    choose_allocation_style,
+    score_fixed_candidate,
+    score_splittable_candidate,
+    weights_for_style,
+)
+
+REASON_NO_CAPACITY = "no_capacity"
+REASON_DEADLINE_IMPOSSIBLE = "deadline_impossible"
+REASON_PREFERENCE_MISMATCH = "preference_mismatch"
+REASON_MAX_CONTINUOUS_TRUNCATION = "max_continuous_truncation"
+REASON_EARLIEST_START_BLOCKS = "earliest_start_blocks"
+REASON_NO_AVAILABILITY = "no_availability"
 
 
 @dataclass
@@ -18,6 +30,24 @@ class AllocatedBlock:
     start_time: datetime
     end_time: datetime
     duration_minutes: int
+
+
+@dataclass
+class UnscheduledInfo:
+    """Diagnostic for a task that was not fully scheduled."""
+
+    task_id: int
+    task_name: str
+    reason: str
+    detail: str
+
+
+@dataclass
+class AllocationResult:
+    """Blocks plus unscheduled diagnostics."""
+
+    blocks: list[AllocatedBlock] = field(default_factory=list)
+    unscheduled: list[UnscheduledInfo] = field(default_factory=list)
 
 
 def slotOverlapsAny(slotStart: datetime, slotEnd: datetime, usedRanges: list[tuple[datetime, datetime]]) -> bool:
@@ -47,14 +77,14 @@ def matchesTaskTimePreference(task: Task, slotStart: datetime) -> bool:
 
 
 def isSlotAllowedForTask(task: Task, slotStart: datetime, slotEnd: datetime) -> bool:
-    """Return True if slot respects earliest start, deadline, and preferences."""
+    """Return True if slot respects hard constraints (earliest start + deadline). Preference is soft."""
     comparableStart = toUtcNaive(slotStart)
     comparableEnd = toUtcNaive(slotEnd)
     if task.earliest_start is not None and comparableStart < toUtcNaive(task.earliest_start):
         return False
     if task.deadline is not None and comparableEnd > toUtcNaive(task.deadline):
         return False
-    return matchesTaskTimePreference(task, slotStart)
+    return True
 
 
 def toUtcNaive(value: datetime) -> datetime:
@@ -62,7 +92,6 @@ def toUtcNaive(value: datetime) -> datetime:
     if value.tzinfo is None:
         return value
     return value.astimezone(timezone.utc).replace(tzinfo=None)
-
 
 
 def orderTasks(tasks: list[Task]) -> list[Task]:
@@ -92,8 +121,114 @@ def orderTasks(tasks: list[Task]) -> list[Task]:
     return result
 
 
+def minutesAllocatedForTask(taskId: int, blocks: list[AllocatedBlock]) -> int:
+    total = 0
+    for b in blocks:
+        if b.task_id == taskId:
+            total += b.duration_minutes
+    return total
 
-def allocateTasks(tasks: list[Task], slots: list[tuple[datetime, datetime]], constraints: Optional[list[Constraint]] = None) -> list[AllocatedBlock]:
+
+def diagnoseUnscheduled(
+    tasks: list[Task],
+    blocks: list[AllocatedBlock],
+    slots: list[tuple[datetime, datetime]],
+    constraints: Optional[list[Constraint]] = None
+) -> list[UnscheduledInfo]:
+    """Explain why tasks were not fully placed."""
+    diagnostics: list[UnscheduledInfo] = []
+    maxContinuous = getMaxContinuousWorkMinutes(constraints or [])
+
+    for task in tasks:
+        if task.id is None:
+            continue
+        allocated = minutesAllocatedForTask(task.id, blocks)
+        remaining = task.estimated_duration_minutes - allocated
+        if remaining <= 0:
+            continue
+
+        reason, detail = _pickUnscheduledReason(task, remaining, slots, maxContinuous, allocated)
+        diagnostics.append(
+            UnscheduledInfo(task_id=task.id, task_name=task.name, reason=reason, detail=detail)
+        )
+    return diagnostics
+
+
+def _pickUnscheduledReason(
+    task: Task,
+    remaining: int,
+    slots: list[tuple[datetime, datetime]],
+    maxContinuous: Optional[int],
+    allocated: int
+) -> tuple[str, str]:
+    if not slots:
+        return REASON_NO_AVAILABILITY, "No available time slots in the requested range."
+
+    hardAllowed = []
+    for slotStart, slotEnd in slots:
+        if isSlotAllowedForTask(task, slotStart, slotEnd):
+            hardAllowed.append((slotStart, slotEnd))
+
+    if not hardAllowed:
+        if task.earliest_start is not None:
+            anyBeforeEarliest = True
+            for slotStart, _ in slots:
+                if toUtcNaive(slotStart) >= toUtcNaive(task.earliest_start):
+                    anyBeforeEarliest = False
+                    break
+            if anyBeforeEarliest:
+                return (
+                    REASON_EARLIEST_START_BLOCKS,
+                    f"No slots start on or after earliest_start={task.earliest_start.isoformat()}."
+                )
+        if task.deadline is not None:
+            return (
+                REASON_DEADLINE_IMPOSSIBLE,
+                f"No slots finish before deadline={task.deadline.isoformat()}."
+            )
+        return REASON_NO_CAPACITY, f"{remaining} minutes remain with no hard-feasible slots."
+
+    # Preference soft mismatch: all hard-allowed slots miss preference, and nothing was placed
+    preferred = task.preferred_time_of_day
+    if preferred and preferred != "anytime" and allocated == 0:
+        prefMatches = [s for s in hardAllowed if matchesTaskTimePreference(task, s[0])]
+        if not prefMatches:
+            # Still could place elsewhere — if remaining, check capacity
+            totalMinutes = 0
+            for s, e in hardAllowed:
+                totalMinutes += int((e - s).total_seconds() / 60)
+            if totalMinutes < remaining:
+                return (
+                    REASON_PREFERENCE_MISMATCH,
+                    f"Preferred {preferred} had no matching capacity; remaining {remaining} min could not fit elsewhere either."
+                )
+
+    if maxContinuous is not None and task.estimated_duration_minutes > maxContinuous and not task.splittable:
+        if allocated > 0 and remaining > 0:
+            return (
+                REASON_MAX_CONTINUOUS_TRUNCATION,
+                f"max_continuous_work={maxContinuous} truncated placement; {remaining} min left unscheduled."
+            )
+
+    if task.deadline is not None:
+        # Check if remaining duration cannot fit before deadline even ignoring other tasks
+        capacityBeforeDeadline = 0
+        for s, e in hardAllowed:
+            capacityBeforeDeadline += int((e - s).total_seconds() / 60)
+        if capacityBeforeDeadline < remaining:
+            return (
+                REASON_DEADLINE_IMPOSSIBLE,
+                f"Only {capacityBeforeDeadline} min feasible before deadline; need {remaining} more."
+            )
+
+    return REASON_NO_CAPACITY, f"{remaining} minutes could not be placed (capacity taken or fragmented)."
+
+
+def allocateTasks(
+    tasks: list[Task],
+    slots: list[tuple[datetime, datetime]],
+    constraints: Optional[list[Constraint]] = None
+) -> AllocationResult:
     """Allocate tasks with scored greedy selection under hard constraints."""
     ordered = orderTasks(tasks)
     timeline = BusyTimeline()
@@ -116,8 +251,45 @@ def allocateTasks(tasks: list[Task], slots: list[tuple[datetime, datetime]], con
         else:
             allocateFixed(task, remaining, slots, timeline, blocks, lastEndByTask, weights, maxContinuousWork)
 
-    return blocks
+    blocks = coalesceContiguousBlocks(blocks, maxContinuousWork)
+    unscheduled = diagnoseUnscheduled(tasks, blocks, slots, constraints)
+    return AllocationResult(blocks=blocks, unscheduled=unscheduled)
 
+
+def coalesceContiguousBlocks(
+    blocks: list[AllocatedBlock],
+    maxContinuousWork: Optional[int] = None
+) -> list[AllocatedBlock]:
+    """Merge adjacent same-task fragments into real time blocks (respect max continuous)."""
+    if not blocks:
+        return []
+
+    ordered = sorted(blocks, key=lambda b: (b.task_id, b.start_time, b.end_time))
+    merged: list[AllocatedBlock] = []
+
+    for block in ordered:
+        if not merged:
+            merged.append(block)
+            continue
+
+        prev = merged[-1]
+        sameTask = prev.task_id == block.task_id
+        contiguous = prev.end_time == block.start_time
+        combinedMinutes = prev.duration_minutes + block.duration_minutes
+        withinCap = maxContinuousWork is None or combinedMinutes <= maxContinuousWork
+
+        if sameTask and contiguous and withinCap:
+            merged[-1] = AllocatedBlock(
+                task_id=prev.task_id,
+                task_name=prev.task_name,
+                start_time=prev.start_time,
+                end_time=block.end_time,
+                duration_minutes=combinedMinutes
+            )
+        else:
+            merged.append(block)
+
+    return merged
 
 
 def allocateSplittable(
@@ -151,7 +323,15 @@ def allocateSplittable(
                 continue
 
             blockEnd = slotStart + timedelta(minutes=allocMinutes)
-            score = score_splittable_candidate(task=task, slot_start=slotStart, slot_end=blockEnd, allocated_minutes=allocMinutes, remaining_before_pick=remaining, previous_end_for_task=previousEnd, weights=weights)
+            score = score_splittable_candidate(
+                task=task,
+                slot_start=slotStart,
+                slot_end=blockEnd,
+                allocated_minutes=allocMinutes,
+                remaining_before_pick=remaining,
+                previous_end_for_task=previousEnd,
+                weights=weights
+            )
 
             if bestChoice is None:
                 bestChoice = (score, slotStart, blockEnd, allocMinutes)
@@ -165,12 +345,17 @@ def allocateSplittable(
             break
 
         _, bestStart, bestEnd, bestMinutes = bestChoice
-        newBlock = AllocatedBlock(task_id=task.id, task_name=task.name, start_time=bestStart, end_time=bestEnd, duration_minutes=bestMinutes)
+        newBlock = AllocatedBlock(
+            task_id=task.id,
+            task_name=task.name,
+            start_time=bestStart,
+            end_time=bestEnd,
+            duration_minutes=bestMinutes
+        )
         blocks.append(newBlock)
         timeline.add(bestStart, bestEnd)
         lastEndByTask[task.id] = bestEnd
         remaining -= bestMinutes
-
 
 
 def _findFixedCandidates(
@@ -252,7 +437,13 @@ def allocateFixed(
         return
 
     chosenStart, chosenEnd = bestRange
-    newBlock = AllocatedBlock(task_id=task.id, task_name=task.name, start_time=chosenStart, end_time=chosenEnd, duration_minutes=allocMinutes)
+    newBlock = AllocatedBlock(
+        task_id=task.id,
+        task_name=task.name,
+        start_time=chosenStart,
+        end_time=chosenEnd,
+        duration_minutes=allocMinutes
+    )
     blocks.append(newBlock)
     timeline.add(chosenStart, chosenEnd)
     lastEndByTask[task.id] = chosenEnd

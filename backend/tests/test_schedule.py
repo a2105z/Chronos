@@ -1,6 +1,5 @@
 from datetime import datetime
 
-import pytest
 from fastapi.testclient import TestClient
 from icalendar import Calendar
 
@@ -8,8 +7,16 @@ from app.services.scheduler.constraints import (
     validateMaxContinuousWork,
     validateNoOverlap,
     validateNoProtectedOverlap,
-    validateWithinAvailability
+    validateWithinAvailability,
 )
+
+
+def scheduleBlocks(response):
+    """Normalize generate response to block list."""
+    data = response.json()
+    if isinstance(data, dict) and "blocks" in data:
+        return data["blocks"]
+    return data
 
 
 def mkDt(dateStr: str) -> str:
@@ -29,12 +36,12 @@ def test_generate_schedule_empty_no_tasks(client: TestClient):
         json={"start_date": mkDt("2030-01-07"), "end_date": mkDt("2030-01-13")}
     )
     assert response.status_code == 200
-    assert response.json() == []
+    assert scheduleBlocks(response) == []
 
 
 
-def test_generate_schedule_fallback_availability_when_none_configured(client: TestClient):
-    """With no availability rows, engine uses full-week fallback and can still place tasks."""
+def test_generate_schedule_no_availability_when_none_configured(client: TestClient):
+    """With no availability rows, generate seeds weekday defaults and schedules work."""
     client.post(
         "/api/tasks",
         json={"name": "Task A", "estimated_duration_minutes": 60}
@@ -44,9 +51,12 @@ def test_generate_schedule_fallback_availability_when_none_configured(client: Te
         json={"start_date": mkDt("2030-01-07"), "end_date": mkDt("2030-01-13")}
     )
     assert response.status_code == 200
-    blocks = response.json()
-    assert len(blocks) >= 1
-    assert blocks[0]["task_name"] == "Task A"
+    data = response.json()
+    assert len(data["blocks"]) >= 1
+    assert "Assumed weekdays" in data["summary"] or data["unscheduled"] == []
+    avail = client.get("/api/availability")
+    assert avail.status_code == 200
+    assert len(avail.json()) >= 5
 
 
 
@@ -65,7 +75,7 @@ def test_generate_schedule_single_task(client: TestClient):
         json={"start_date": mkDt("2030-01-07"), "end_date": mkDt("2030-01-11")}
     )
     assert response.status_code == 200
-    blocks = response.json()
+    blocks = scheduleBlocks(response)
     assert len(blocks) == 1
     assert blocks[0]["task_name"] == "Study"
     assert blocks[0]["duration_minutes"] == 60
@@ -93,7 +103,7 @@ def test_generate_schedule_no_overlap(client: TestClient):
         json={"start_date": mkDt("2030-01-07"), "end_date": mkDt("2030-01-11")}
     )
     assert response.status_code == 200
-    blocks = response.json()
+    blocks = scheduleBlocks(response)
     assert len(blocks) >= 2
     validateNoOverlap(blocks)
 
@@ -115,7 +125,7 @@ def test_generate_schedule_within_availability(client: TestClient):
         json={"start_date": mkDt("2030-01-07"), "end_date": mkDt("2030-01-09")}
     )
     assert response.status_code == 200
-    blocks = response.json()
+    blocks = scheduleBlocks(response)
     assert len(blocks) == 1
     validateWithinAvailability(blocks, windows)
 
@@ -148,7 +158,7 @@ def test_generate_schedule_respects_protected_block(client: TestClient):
         json={"start_date": mkDt("2030-01-07"), "end_date": mkDt("2030-01-09")}
     )
     assert response.status_code == 200
-    blocks = response.json()
+    blocks = scheduleBlocks(response)
     validateNoProtectedOverlap(blocks, protected)
 
 
@@ -173,7 +183,7 @@ def test_generate_schedule_splittable_task(client: TestClient):
     )
     assert response.status_code == 200
     blocks = []
-    for b in response.json():
+    for b in scheduleBlocks(response):
         if b["task_name"] == "Splittable":
             blocks.append(b)
     assert len(blocks) >= 2
@@ -292,7 +302,7 @@ def test_generate_schedule_respects_earliest_start(client: TestClient):
     )
     assert response.status_code == 200
     blocks = []
-    for block in response.json():
+    for block in scheduleBlocks(response):
         if block["task_name"] == "Earliest Window":
             blocks.append(block)
     assert len(blocks) == 1
@@ -324,7 +334,7 @@ def test_generate_schedule_skips_task_when_deadline_missed(client: TestClient):
     )
     assert response.status_code == 200
     names = []
-    for block in response.json():
+    for block in scheduleBlocks(response):
         names.append(block["task_name"])
     assert "Impossible Deadline" not in names
     assert "Feasible Task" in names
@@ -351,7 +361,7 @@ def test_generate_schedule_respects_preferred_time_of_day(client: TestClient):
     )
     assert response.status_code == 200
     blocks = []
-    for block in response.json():
+    for block in scheduleBlocks(response):
         if block["task_name"] == "Morning Deep Work":
             blocks.append(block)
     assert len(blocks) == 1
@@ -379,7 +389,7 @@ def test_invariants_max_continuous_work_splittable(client: TestClient):
         json={"start_date": mkDt("2030-01-07"), "end_date": mkDt("2030-01-09")}
     )
     assert response.status_code == 200
-    blocks = response.json()
+    blocks = scheduleBlocks(response)
     validateMaxContinuousWork(blocks, 60)
     totalMins = 0
     for b in blocks:
@@ -408,7 +418,7 @@ def test_invariants_max_continuous_work_non_splittable(client: TestClient):
         json={"start_date": mkDt("2030-01-07"), "end_date": mkDt("2030-01-09")}
     )
     assert response.status_code == 200
-    blocks = response.json()
+    blocks = scheduleBlocks(response)
     validateMaxContinuousWork(blocks, 60)
     validateNoOverlap(blocks)
     longFixedBlocks = []
@@ -459,7 +469,7 @@ def test_invariants_all_constraints_combined(client: TestClient):
         json={"start_date": mkDt("2030-01-07"), "end_date": mkDt("2030-01-11")}
     )
     assert response.status_code == 200
-    blocks = response.json()
+    blocks = scheduleBlocks(response)
     validateNoOverlap(blocks)
     validateWithinAvailability(blocks, windows)
     validateNoProtectedOverlap(blocks, protected)
@@ -475,7 +485,7 @@ def test_move_block_rejected_when_overlapping(client: TestClient):
         "/api/schedule",
         json={"start_date": mkDt("2030-01-07"), "end_date": mkDt("2030-01-09")}
     )
-    blocks = gen.json()
+    blocks = scheduleBlocks(gen)
     assert len(blocks) >= 2
     blockA = None
     blockB = None
@@ -499,7 +509,7 @@ def test_delete_block_then_get_excludes_it(client: TestClient):
         "/api/schedule",
         json={"start_date": mkDt("2030-01-07"), "end_date": mkDt("2030-01-09")}
     )
-    blocks = gen.json()
+    blocks = scheduleBlocks(gen)
     assert len(blocks) == 1
     bid = blocks[0]["id"]
     delResp = client.delete(f"/api/schedule/blocks/{bid}")

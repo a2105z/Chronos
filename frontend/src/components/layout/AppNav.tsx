@@ -1,32 +1,31 @@
 import type { AppView } from "../../types/app";
 
+const TABS: { id: AppView; label: string }[] = [
+  { id: "plan", label: "Plan" },
+  { id: "calendar", label: "Calendar" },
+  { id: "tasks", label: "Tasks" },
+  { id: "availability", label: "Availability" },
+  { id: "constraints", label: "Constraints" }
+];
+
 interface AppNavProps {
   activeView: AppView;
   onSelectView: (view: AppView) => void;
 }
 
 export function AppNav({ activeView, onSelectView }: AppNavProps) {
-  function tabClass(view: AppView): string {
-    if (activeView === view) {
-      return "active";
-    }
-    return "";
-  }
-
   return (
-    <nav className="nav-tabs">
-      <button type="button" className={tabClass("tasks")} onClick={() => onSelectView("tasks")}>
-        Tasks
-      </button>
-      <button type="button" className={tabClass("availability")} onClick={() => onSelectView("availability")}>
-        Availability
-      </button>
-      <button type="button" className={tabClass("constraints")} onClick={() => onSelectView("constraints")}>
-        Constraints
-      </button>
-      <button type="button" className={tabClass("calendar")} onClick={() => onSelectView("calendar")}>
-        Calendar
-      </button>
+    <nav className="nav-tabs" aria-label="Primary">
+      {TABS.map((tab) => (
+        <button
+          key={tab.id}
+          type="button"
+          className={activeView === tab.id ? "active" : ""}
+          onClick={() => onSelectView(tab.id)}
+        >
+          {tab.label}
+        </button>
+      ))}
     </nav>
   );
 }

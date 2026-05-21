@@ -3,7 +3,6 @@ from datetime import datetime, timedelta
 from app.models.availability import AvailabilityWindow
 from app.models.constraint import Constraint
 
-
 SLOT_SIZE_MINUTES = 15
 
 

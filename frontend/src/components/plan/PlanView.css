@@ -1,0 +1,149 @@
+.plan-view {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 720px;
+}
+
+.plan-hero {
+  padding: 0.25rem 0;
+}
+
+.brand-hero {
+  font-family: var(--font-display);
+  font-size: clamp(2.1rem, 4vw, 2.6rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: #202124;
+  margin: 0 0 0.5rem;
+}
+
+.plan-lead,
+.plan-lead-hero {
+  margin: 0 0 1.2rem;
+  color: #5f6368;
+  max-width: 38rem;
+  font-size: 1rem;
+}
+
+.plan-composer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.plan-composer textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 120px;
+  background: #f8f9fa;
+  border: 1px solid #dadce0;
+  border-radius: 12px;
+  color: #202124;
+  padding: 1rem 1.1rem;
+  font: inherit;
+  font-size: 1rem;
+}
+
+.plan-hero.is-focused .plan-composer textarea {
+  border-color: #1a73e8;
+  box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.15);
+  background: #fff;
+}
+
+.plan-composer textarea:focus {
+  outline: none;
+}
+
+.composer-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+}
+
+.chip {
+  border: 1px solid #dadce0;
+  background: #fff;
+  color: #3c4043;
+  border-radius: 8px;
+  padding: 0.5rem 0.8rem;
+  font-size: 0.78rem;
+  font-weight: 550;
+  cursor: pointer;
+  text-align: left;
+}
+
+.chip:hover {
+  border-color: #1a73e8;
+  color: #174ea6;
+  background: #e8f0fe;
+}
+
+.plan-result h2,
+.suggestions h2,
+.diagnostics h3 {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  margin: 0 0 0.5rem;
+  color: #202124;
+}
+
+.assistant-message,
+.schedule-summary {
+  color: #3c4043;
+  margin: 0 0 0.5rem;
+}
+
+.diagnostics ul,
+.suggestions ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.diagnostics li {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.7rem 0;
+  border-bottom: 1px solid #e8eaed;
+  color: #3c4043;
+  font-size: 0.9rem;
+}
+
+.reason-pill {
+  color: #1a73e8;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.detail {
+  color: #80868b;
+  font-size: 0.84rem;
+}
+
+.plan-error {
+  color: #c5221f;
+  font-weight: 550;
+}
+
+.fade-in {
+  animation: fadeIn 0.35s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

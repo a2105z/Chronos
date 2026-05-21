@@ -1,9 +1,14 @@
-from datetime import datetime
 
 import pytest
 
 from app.models.constraint import Constraint
-from app.services.scheduler.constraints import getMaxContinuousWorkMinutes, validateMaxContinuousWork, validateNoOverlap, validateNoProtectedOverlap, validateWithinAvailability
+from app.services.scheduler.constraints import (
+    getMaxContinuousWorkMinutes,
+    validateMaxContinuousWork,
+    validateNoOverlap,
+    validateNoProtectedOverlap,
+    validateWithinAvailability,
+)
 
 
 def test_getMaxContinuousWorkMinutes_empty():

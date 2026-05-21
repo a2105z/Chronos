@@ -10,6 +10,7 @@ class Task(SQLModel, table=True):
     __tablename__ = "tasks"
 
     id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: Optional[int] = Field(default=None, foreign_key="users.id", index=True)
     name: str
     estimated_duration_minutes: int = Field(ge=1)
     priority: int = Field(default=0, ge=0)

@@ -56,6 +56,7 @@ export default function TaskList({ onTaskCreated }: TaskListProps) {
   const [finishWindowEnd, setFinishWindowEnd] = useState("");
   const [durationHours, setDurationHours] = useState(0);
   const [durationMinutesPart, setDurationMinutesPart] = useState(30);
+  const [regenHint, setRegenHint] = useState(false);
 
   async function loadTasks() {
     try {
@@ -107,6 +108,7 @@ export default function TaskList({ onTaskCreated }: TaskListProps) {
       setDurationMinutesPart(30);
       setShowForm(false);
       loadTasks();
+      setRegenHint(true);
       if (onTaskCreated) {
         onTaskCreated();
       }
@@ -260,6 +262,15 @@ export default function TaskList({ onTaskCreated }: TaskListProps) {
       </div>
 
       {formSection}
+
+      {regenHint ? (
+        <p className="muted small">
+          Task saved. Open Calendar and click Regenerate (or use Plan) to place it on your week.
+          <button type="button" className="btn-secondary" style={{ marginLeft: "0.5rem" }} onClick={() => setRegenHint(false)}>
+            Dismiss
+          </button>
+        </p>
+      ) : null}
 
       <ul className="task-items">{taskItems}</ul>
     </div>

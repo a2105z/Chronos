@@ -1,16 +1,12 @@
-from app.schemas.task import TaskCreate, TaskUpdate, TaskRead
-from app.schemas.availability import (
-    AvailabilityCreate,
-    AvailabilityRead,
-    AvailabilityUpdate
-)
+from app.schemas.availability import AvailabilityCreate, AvailabilityRead, AvailabilityUpdate
 from app.schemas.constraint import (
     ConstraintCreate,
     ConstraintRead,
     ConstraintType,
-    ConstraintUpdate
+    ConstraintUpdate,
 )
 from app.schemas.schedule import ScheduledBlockMove, ScheduledBlockRead, ScheduleGenerateRequest
+from app.schemas.task import TaskCreate, TaskRead, TaskUpdate
 
 __all__ = [
     "TaskCreate", "TaskUpdate", "TaskRead",

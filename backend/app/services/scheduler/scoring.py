@@ -21,9 +21,9 @@ class AllocationScoreWeights:
     lateness_penalty_weight: float = 6.0
 
 
-DEFAULT_WEIGHTS = AllocationScoreWeights()
-DEADLINE_FOCUS_WEIGHTS = AllocationScoreWeights(priority_weight=1.4, deadline_weight=4.2, duration_weight=0.9, preference_weight=0.8, continuity_weight=0.4, lateness_penalty_weight=8.0)
-DEEP_WORK_WEIGHTS = AllocationScoreWeights(priority_weight=1.2, deadline_weight=2.0, duration_weight=1.6, preference_weight=1.2, continuity_weight=1.7, lateness_penalty_weight=6.0)
+DEFAULT_WEIGHTS = AllocationScoreWeights(preference_weight=2.0)
+DEADLINE_FOCUS_WEIGHTS = AllocationScoreWeights(priority_weight=1.4, deadline_weight=4.2, duration_weight=0.9, preference_weight=1.6, continuity_weight=0.4, lateness_penalty_weight=8.0)
+DEEP_WORK_WEIGHTS = AllocationScoreWeights(priority_weight=1.2, deadline_weight=2.0, duration_weight=1.6, preference_weight=2.4, continuity_weight=1.7, lateness_penalty_weight=6.0)
 
 
 def _to_utc_naive(value: datetime) -> datetime:

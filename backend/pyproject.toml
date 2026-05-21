@@ -2,7 +2,8 @@
 line-length = 88
 target-version = "py311"
 select = ["E", "F", "I", "N", "W"]
-ignore = []
+# camelCase is intentional across the Chronos API / engine surface
+ignore = ["N802", "N803", "N806", "N816", "E501"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

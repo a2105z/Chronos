@@ -1,114 +1,107 @@
-.app {
+.shell {
+  display: flex;
   min-height: 100vh;
+  background: #f8f9fb;
+  color: #202124;
+}
+
+.shell-main {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
 }
 
-.app-header {
-  background: linear-gradient(140deg, var(--navy-950) 0%, var(--navy-900) 56%, #133261 100%);
-  color: white;
-  box-shadow: var(--shadow-md);
-}
-
-.app-header-inner {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 1.4rem 1.6rem 1.2rem;
-}
-
-.app-header h1 {
-  margin: 0;
-  letter-spacing: 0.2px;
-  font-size: 1.72rem;
-  font-weight: 650;
-}
-
-.tagline {
-  margin: 0.22rem 0 0.95rem;
-  opacity: 0.92;
-  font-size: 0.92rem;
-  color: #cfe1ff;
-}
-
-.nav-tabs {
+.shell-body {
   display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.nav-tabs button {
-  padding: 0.5rem 0.95rem;
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  background: rgba(255, 255, 255, 0.03);
-  color: #f8fbff;
-  border-radius: 10px;
-  cursor: pointer;
-  font-size: 0.88rem;
-  font-weight: 550;
-  transition: background 0.2s, transform 0.15s, border-color 0.2s;
-}
-
-.nav-tabs button:hover {
-  background: rgba(255, 255, 255, 0.14);
-  border-color: rgba(255, 255, 255, 0.5);
-  transform: translateY(-1px);
-}
-
-.nav-tabs button.active {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.62);
-  color: #fff;
-}
-
-.app-main {
   flex: 1;
-  padding: 1.35rem 1.25rem 2rem;
-  max-width: 1100px;
-  width: 100%;
-  margin: 0 auto;
+  min-height: 0;
+}
+
+.shell-center {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+  padding: 1rem 1.15rem 1.5rem;
+  background: #fff;
+}
+
+.boot-screen {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background: #f8f9fb;
+  color: #5f6368;
+  font-family: var(--font-display);
 }
 
 .btn-primary {
-  padding: 0.52rem 0.9rem;
-  background: linear-gradient(180deg, var(--navy-800) 0%, var(--navy-900) 100%);
+  padding: 0.55rem 0.95rem;
+  background: #1a73e8;
   color: #fff;
   border: 1px solid transparent;
-  border-radius: 9px;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 0.87rem;
-  font-weight: 560;
+  font-size: 0.88rem;
+  font-weight: 650;
+  font-family: inherit;
 }
 
-.btn-primary:hover {
-  background: linear-gradient(180deg, var(--navy-700) 0%, var(--navy-800) 100%);
+.btn-primary:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .btn-secondary {
-  padding: 0.46rem 0.8rem;
-  border-radius: 9px;
-  border: 1px solid var(--border);
+  padding: 0.48rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid #dadce0;
   background: #fff;
-  color: var(--text-primary);
+  color: #3c4043;
   cursor: pointer;
   font-size: 0.84rem;
-  font-weight: 550;
+  font-weight: 600;
+  font-family: inherit;
 }
 
-.btn-secondary:hover {
-  background: var(--surface-soft);
+.btn-secondary:hover:not(:disabled) {
+  background: #f8f9fa;
 }
 
 .btn-danger {
-  padding: 0.34rem 0.64rem;
-  background: #cf3e4f;
-  color: #fff;
-  border: none;
+  padding: 0.36rem 0.68rem;
+  background: #fce8e6;
+  color: #c5221f;
+  border: 1px solid transparent;
   border-radius: 8px;
   cursor: pointer;
   font-size: 0.78rem;
-  font-weight: 560;
+  font-weight: 650;
+  font-family: inherit;
 }
 
-.btn-danger:hover {
-  background: #b93546;
+.task-list,
+.availability-view,
+.constraints-view,
+.plan-view {
+  max-width: 920px;
+}
+
+.task-list h2,
+.availability-view h2,
+.constraints-view h2 {
+  font-family: var(--font-display);
+  color: #202124;
+}
+
+.muted {
+  color: #80868b;
+}
+
+.small {
+  font-size: 0.84rem;
 }

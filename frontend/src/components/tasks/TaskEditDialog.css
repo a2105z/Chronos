@@ -1,68 +1,78 @@
 .task-edit-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(8, 26, 51, 0.55);
+  background: rgba(16, 23, 34, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 50;
   padding: 1rem;
+  backdrop-filter: blur(4px);
 }
 
 .task-edit-dialog {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
   max-width: 440px;
   width: 100%;
   box-shadow: var(--shadow-md);
+  animation: fadeIn 0.3s ease-out;
 }
 
 .task-edit-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid #e5ecfb;
+  padding: 0.85rem 1.05rem;
+  border-bottom: 1px solid var(--line);
 }
 
 .task-edit-header h3 {
   margin: 0;
+  font-family: var(--font-display);
   font-size: 1.1rem;
+  font-weight: 720;
+  letter-spacing: -0.03em;
+  color: var(--ink);
 }
 
 .btn-close {
   border: none;
   background: transparent;
-  font-size: 1.5rem;
+  font-size: 1.45rem;
   line-height: 1;
   cursor: pointer;
-  color: var(--text-muted);
+  color: var(--ink-mute);
 }
 
 .task-edit-form {
-  padding: 1rem;
+  padding: 1.05rem;
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
+  gap: 0.7rem;
 }
 
 .task-edit-form label {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  font-size: 0.9rem;
+  gap: 0.3rem;
+  font-size: 0.82rem;
+  font-weight: 650;
+  color: var(--ink-mute);
 }
 
 .task-edit-form input[type="text"],
 .task-edit-form input[type="number"],
 .task-edit-form input[type="date"],
 .task-edit-form select {
-  padding: 0.45rem 0.5rem;
-  border-radius: 8px;
-  border: 1px solid #c5d4f2;
+  padding: 0.52rem 0.65rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line-strong);
   background: #fff;
-  color: var(--text-primary);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 500;
 }
 
 .task-edit-actions {
@@ -74,4 +84,15 @@
 
 .task-edit-dialog .btn-secondary {
   min-width: 84px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

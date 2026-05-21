@@ -1,0 +1,22 @@
+services:
+  api:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      SECRET_KEY: ${SECRET_KEY:-chronos-dev-secret-change-me}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      DATABASE_URL: sqlite:///./data/chronos.db
+      CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173,http://localhost,http://localhost:80
+    volumes:
+      - chronos-data:/app/data
+
+  web:
+    build: ./frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+
+volumes:
+  chronos-data:

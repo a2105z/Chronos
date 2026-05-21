@@ -1,0 +1,135 @@
+.sidebar {
+  width: 220px;
+  min-width: 220px;
+  background: #1b2430;
+  color: #c5cad3;
+  display: flex;
+  flex-direction: column;
+  padding: 1.1rem 0.85rem 1rem;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.25rem 0.45rem 1.15rem;
+}
+
+.sidebar-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: #3b82f6;
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  font-family: var(--font-display);
+}
+
+.sidebar-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: #f3f5f7;
+  letter-spacing: -0.02em;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex: 1;
+}
+
+.sidebar-section {
+  margin: 1.1rem 0.55rem 0.35rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #7b8494;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  border: none;
+  background: transparent;
+  color: #b8bfca;
+  text-align: left;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 550;
+  padding: 0.52rem 0.65rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.sidebar-link.sub {
+  padding-left: 1.15rem;
+  font-size: 0.86rem;
+  font-weight: 500;
+  color: #9aa3b2;
+}
+
+.sidebar-link:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+}
+
+.sidebar-link.active {
+  background: rgba(59, 130, 246, 0.22);
+  color: #fff;
+}
+
+.sidebar-ico {
+  width: 1.1rem;
+  text-align: center;
+  opacity: 0.9;
+  font-size: 0.85rem;
+}
+
+.sidebar-foot {
+  padding: 0.75rem 0.55rem 0.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sidebar-foot-line {
+  margin: 0;
+  font-size: 0.72rem;
+  color: #7b8494;
+  line-height: 1.35;
+}
+
+@media (max-width: 960px) {
+  .sidebar {
+    width: 72px;
+    min-width: 72px;
+    padding: 0.85rem 0.45rem;
+  }
+
+  .sidebar-name,
+  .sidebar-section,
+  .sidebar-foot,
+  .sidebar-link.sub {
+    display: none;
+  }
+
+  .sidebar-link {
+    justify-content: center;
+    padding: 0.65rem;
+  }
+
+  .sidebar-brand {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+  }
+}

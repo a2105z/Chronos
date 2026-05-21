@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, master, develop]
   pull_request:
-    branches: [main, develop]
+    branches: [main, master, develop]
 
 jobs:
   backend:
@@ -28,7 +28,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Lint (Ruff)
-        run: ruff check app tests --output-format=github
+        run: ruff check app tests --config ruff.toml --output-format=github
 
       - name: Test
         run: pytest --cov=app --cov-report=xml
@@ -56,3 +56,6 @@ jobs:
 
       - name: Test
         run: npm test -- --run
+
+      - name: Build
+        run: npm run build

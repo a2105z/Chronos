@@ -10,6 +10,7 @@ class ScheduledBlock(SQLModel, table=True):
     __tablename__ = "scheduled_blocks"
 
     id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: Optional[int] = Field(default=None, foreign_key="users.id", index=True)
     task_id: int = Field(foreign_key="tasks.id")
     start_time: datetime
     end_time: datetime

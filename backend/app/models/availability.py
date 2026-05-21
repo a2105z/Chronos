@@ -9,6 +9,7 @@ class AvailabilityWindow(SQLModel, table=True):
     __tablename__ = "availability_windows"
 
     id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: Optional[int] = Field(default=None, foreign_key="users.id", index=True)
     day_of_week: int = Field(ge=0, le=6)
     start_minutes: int = Field(ge=0, le=1440)
     end_minutes: int = Field(ge=0, le=1440)

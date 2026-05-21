@@ -14,7 +14,12 @@ export function toIsoDateFromInput(value: string): string | null {
 }
 
 export function toIsoDateTime(date: Date): string {
-  return date.toISOString();
+  return toLocalApiDateTime(date);
+}
+
+/** Local wall-clock datetime for the API (no UTC shift). */
+export function toLocalApiDateTime(date: Date): string {
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}T${pad2(date.getHours())}:${pad2(date.getMinutes())}:${pad2(date.getSeconds())}`;
 }
 
 export function formatTimeFromIso(value: string): string {
@@ -32,10 +37,13 @@ export function toDatetimeLocalValue(iso: string): string {
   return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 }
 
-/** Parse datetime-local string to ISO (UTC) for the API. */
+/** Parse datetime-local string to local API datetime (no UTC shift). */
 export function fromDatetimeLocalToIso(value: string): string {
-  let d = new Date(value);
-  return d.toISOString();
+  // value is already "YYYY-MM-DDTHH:mm" in local time
+  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) {
+    return `${value}:00`;
+  }
+  return toLocalApiDateTime(new Date(value));
 }
 
 export function triggerBlobDownload(blob: Blob, filename: string): void {

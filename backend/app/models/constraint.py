@@ -9,6 +9,7 @@ class Constraint(SQLModel, table=True):
     __tablename__ = "constraints"
 
     id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: Optional[int] = Field(default=None, foreign_key="users.id", index=True)
     constraint_type: str
     day_of_week: Optional[int] = None
     start_minutes: Optional[int] = None
